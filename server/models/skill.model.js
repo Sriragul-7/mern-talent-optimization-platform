@@ -1,30 +1,33 @@
-import mongoose from "mongoose";
-import { SKILL_LEVELS, SKILL_LEVEL_LABELS } from "./enums.js";
+const mongoose = require('mongoose');
 
-const { Schema, model } = mongoose;
-
-const SkillSchema = new Schema(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    domainId: { type: Schema.Types.ObjectId, ref: "Domain", required: true },
-
-    name: { type: String, required: true },
-
-    currentLevel: {
-      type: Number,
-      enum: Object.values(SKILL_LEVELS),
-      required: true,
-    },
-
-    calculatedScore: {
-      finalScore: { type: Number, default: 0 },
-    },
+const skillSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true
   },
-  { timestamps: true }
-);
-
-SkillSchema.virtual("levelLabel").get(function () {
-  return SKILL_LEVEL_LABELS[this.currentLevel];
+  name: {
+    type: String,
+    required: true
+  },
+  category: {
+    type: String,
+    enum: ['Technical', 'Soft Skill', 'Language', 'Other'],
+    default: 'Technical'
+  },
+  level: {
+    type: String,
+    enum: ['Beginner', 'Intermediate', 'Pro'],
+    required: true
+  },
+  endorsements: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
 });
 
-export const Skill = model("Skill", SkillSchema);
+module.exports = mongoose.model('Skill', skillSchema);

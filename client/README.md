@@ -1,16 +1,116 @@
-# React + Vite
+# SkillBridge Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**A modern SaaS-grade career intelligence platform** for students and employers.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- ⚡ **React 18** + **Vite**
+- 🎨 **TailwindCSS** (dark mode, custom design tokens)
+- 🔀 **React Router v6**
+- 📊 **Recharts** (Radar, Bar, Area, Pie charts)
+- 🔷 **Lucide React** icons
+- 🌐 **Axios** for API calls
 
-## React Compiler
+## Getting Started
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+cd client
+npm install
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Open [http://localhost:5173](http://localhost:5173)
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Demo Login
+
+- Select **Student** or **Employer** role
+- Enter any email and password
+- The app runs on **mock data** until you connect to the backend
+
+## Folder Structure
+
+```
+src/
+├── App.jsx                   # Routes & providers
+├── index.css                 # Global styles & Tailwind layers
+├── context/
+│   ├── AuthContext.jsx       # Auth state (user, token, login/logout)
+│   └── ThemeContext.jsx      # Dark/light mode toggle
+├── services/
+│   └── api.js                # Axios instance + all API calls
+├── utils/
+│   ├── helpers.js            # Formatting, color utils
+│   └── mockData.js           # Demo data (replace with API)
+├── layouts/
+│   ├── StudentLayout.jsx     # Student page shell
+│   ├── EmployerLayout.jsx    # Employer page shell
+│   ├── StudentSidebar.jsx    # Student nav
+│   ├── EmployerSidebar.jsx   # Employer nav
+│   └── TopNav.jsx            # Top header bar
+├── components/
+│   ├── ui/
+│   │   ├── Avatar.jsx
+│   │   ├── Badge.jsx
+│   │   ├── Button.jsx
+│   │   ├── Card.jsx
+│   │   ├── EmptyState.jsx
+│   │   ├── Input.jsx
+│   │   ├── Modal.jsx
+│   │   ├── ProgressBar.jsx
+│   │   └── StatCard.jsx
+│   └── charts/
+│       ├── ActivityLineChart.jsx
+│       ├── SkillPieChart.jsx
+│       ├── SkillProgressChart.jsx
+│       └── SkillRadarChart.jsx
+└── pages/
+    ├── Login.jsx
+    ├── Register.jsx
+    ├── student/
+    │   ├── StudentDashboard.jsx  # Stats, charts, AI recommendations
+    │   ├── MySkills.jsx          # CRUD skills with categories
+    │   ├── MyProjects.jsx        # Portfolio management
+    │   ├── Certifications.jsx    # Certificates tracker
+    │   ├── SkillGap.jsx          # Gap analysis vs target roles
+    │   ├── Resume.jsx            # Generated resume + PDF download
+    │   └── Profile.jsx           # Editable profile form
+    └── employer/
+        ├── EmployerDashboard.jsx # Platform stats & charts
+        ├── SearchTalent.jsx      # Filter & browse students
+        └── TalentAnalytics.jsx   # Deep analytics
+
+```
+
+## Connecting to Your Backend
+
+Replace mock data calls in pages with real API calls from `src/services/api.js`.
+
+Example:
+```js
+// Before (mock)
+const [skills] = useState(MOCK_SKILLS)
+
+// After (real API)
+const [skills, setSkills] = useState([])
+useEffect(() => {
+  studentService.getSkills().then(res => setSkills(res.data))
+}, [])
+```
+
+Set your backend URL:
+```env
+VITE_API_URL=http://localhost:5000/api
+```
+
+## Features
+
+| Feature | Description |
+|---------|-------------|
+| 🌙 Dark Mode | Global toggle via sidebar, persisted to localStorage |
+| 📊 Charts | Radar, Bar, Area, Pie charts using Recharts |
+| 📄 Resume PDF | Download resume using html2pdf.js |
+| 🔒 Auth Guard | Role-based route protection |
+| 📱 Responsive | Mobile-first with hamburger sidebar |
+| ✨ Animations | Fade-in, slide-up, hover transitions |
+| 🎯 Skill Gap | Visual gap analysis vs target roles |
+| 🤖 AI Recs | Dynamic recommendation cards |

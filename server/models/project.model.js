@@ -1,17 +1,36 @@
-import mongoose from "mongoose";
-const { Schema, model } = mongoose;
+const mongoose = require('mongoose');
 
-const ProjectSchema = new Schema(
-  {
-    userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-    domainId: { type: Schema.Types.ObjectId, ref: "Domain" },
-
-    title: { type: String, required: true },
-    description: String,
-    techStack: [String],
-    githubLink: String,
+const projectSchema = new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true
   },
-  { timestamps: true }
-);
+  name: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  technologies: [{
+    type: String,
+    required: true
+  }],
+  startDate: Date,
+  endDate: Date,
+  githubLink: String,
+  liveLink: String,
+  teamMembers: [{
+    name: String,
+    role: String
+  }],
+  highlights: [String],
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
-export const Project = model("Project", ProjectSchema);
+module.exports = mongoose.model('Project', projectSchema);

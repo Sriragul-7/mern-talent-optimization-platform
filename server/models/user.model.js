@@ -1,46 +1,38 @@
-import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import { ROLES, VISIBILITY_SETTINGS } from "./enums.js";
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-const { Schema, model } = mongoose;
-
-const UserSchema = new Schema(
-  {
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true, select: false },
-
-    personalInfo: {
-      firstName: String,
-      lastName: String,
-      bio: String,
-    },
-
-    role: {
-      type: String,
-      enum: Object.values(ROLES),
-      default: ROLES.USER,
-    },
-
-    settings: {
-      profileVisibility: {
-        type: String,
-        enum: Object.values(VISIBILITY_SETTINGS),
-        default: VISIBILITY_SETTINGS.EMPLOYERS_ONLY,
-      },
-    },
+const userSchema = new mongoose.Schema({
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
   },
-  { timestamps: true }
-);
+  password: {
+    type: String,
+    required: true,
+    minlength: 6
+  },
+  role: {
+    type: String,
+    enum: ['student', 'employer'],
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
 
-// Hash password
-UserSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
   this.password = await bcrypt.hash(this.password, 10);
   next();
 });
 
-UserSchema.methods.comparePassword = function (pwd) {
-  return bcrypt.compare(pwd, this.password);
+userSchema.methods.comparePassword = async function(candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
-export const User = model("User", UserSchema);
+module.exports = mongoose.model('User', userSchema);
