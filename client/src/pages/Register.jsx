@@ -4,17 +4,6 @@ import { Eye, EyeOff, ArrowRight, GraduationCap, Briefcase, CheckCircle2, Clock,
 import { useAuth } from '../context/AuthContext'
 import { authService } from '../services/api'
 
-const STUDENT_PERKS = [
-  'AI-powered skill gap analysis per target role',
-  'Readiness score with personalised action plan',
-  'Auto-generated professional resume',
-  'Get discovered by 1,200+ hiring employers',
-]
-
-const INDUSTRIES = [
-  'Software / IT', 'Fintech', 'E-Commerce', 'Healthcare', 'Edtech',
-  'Manufacturing', 'Banking / Finance', 'Consulting', 'Media / Content', 'Other',
-]
 
 export default function Register() {
   const [role, setRole] = useState('student')
@@ -250,14 +239,7 @@ export default function Register() {
 
           {/* Info banner */}
           {role === 'student' ? (
-            <div className="mb-5 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl space-y-1.5">
-              {STUDENT_PERKS.map((p, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-brand-500 mt-0.5 flex-shrink-0" />
-                  <span className="text-xs text-slate-600 dark:text-slate-400">{p}</span>
-                </div>
-              ))}
-            </div>
+            <></>
           ) : (
             <div className="mb-5 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl">
               <p className="text-xs font-bold text-amber-700 dark:text-amber-400 mb-1 flex items-center gap-1.5">

@@ -1,155 +1,183 @@
-const Employer = require('../models/Employer');
-const Student = require('../models/Student');
-const Skill = require('../models/Skill');
-const Project = require('../models/Project');
-const Certification = require('../models/Certification');
+const User = require('../models/User')
+const Skill = require('../models/Skill')
+const Project = require('../models/Project')
+const Certification = require('../models/Certification')
+const { computeReadiness } = require('../utils/readiness')
+const { formatUser } = require('../utils/jwt')
 
-exports.getEmployerProfile = async (req, res) => {
+// GET /api/employer/dashboard
+const getDashboard = async (req, res) => {
   try {
-    const employer = await Employer.findOne({ userId: req.userId });
-    if (!employer) {
-      return res.status(404).json({ message: 'Employer not found' });
-    }
-    res.json(employer);
-  } catch (error) {
-    console.error('Get employer profile error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    const [totalStudents, allSkills] = await Promise.all([
+      User.countDocuments({ role: 'student' }),
+      Skill.find(),
+    ])
 
-exports.updateEmployerProfile = async (req, res) => {
-  try {
-    const employer = await Employer.findOneAndUpdate(
-      { userId: req.userId },
-      req.body,
-      { new: true }
-    );
-    res.json(employer);
-  } catch (error) {
-    console.error('Update employer error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
+    const activeSkills = new Set(allSkills.map(s => s.name)).size
 
-exports.searchStudents = async (req, res) => {
-  try {
-    const { skills, certifications, minProjects, minCGPA, level, search } = req.query;
-    
-    let query = {};
+    const students = await User.find({ role: 'student', cgpa: { $exists: true, $ne: null } }, 'cgpa')
+    const avgCgpa = students.length
+      ? (students.reduce((sum, s) => sum + (s.cgpa || 0), 0) / students.length).toFixed(1)
+      : 0
 
-    // Search by name or email
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
-      ];
-    }
+    const uniList = await User.distinct('university', { role: 'student', university: { $exists: true, $ne: '' } })
 
-    // Filter by CGPA
-    if (minCGPA) {
-      query.cgpa = { $gte: parseFloat(minCGPA) };
-    }
+    // Top 8 skills
+    const topSkills = await Skill.aggregate([
+      { $group: { _id: '$name', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 8 },
+      { $project: { _id: 0, name: '$_id', count: 1 } },
+    ])
 
-    // Filter by level
-    if (level) {
-      query.level = level;
-    }
-
-    // Filter by min projects
-    if (minProjects) {
-      query.totalProjects = { $gte: parseInt(minProjects) };
-    }
-
-    // Get students
-    let students = await Student.find(query);
-
-    // Filter by skills if provided
-    if (skills) {
-      const skillList = skills.split(',');
-      const studentIds = await Skill.distinct('studentId', {
-        name: { $in: skillList }
-      });
-      students = students.filter(s => studentIds.includes(s._id.toString()));
-    }
-
-    // Filter by certifications if provided
-    if (certifications) {
-      const certList = certifications.split(',');
-      const studentIds = await Certification.distinct('studentId', {
-        name: { $in: certList }
-      });
-      students = students.filter(s => studentIds.includes(s._id.toString()));
-    }
-
-    // Calculate match score for each student
-    const scoredStudents = await Promise.all(students.map(async (student) => {
-      let score = 0;
-      
-      // Skill match score
-      if (skills) {
-        const studentSkills = await Skill.find({ studentId: student._id });
-        const requiredSkills = skills.split(',');
-        const matchedSkills = studentSkills.filter(s => 
-          requiredSkills.includes(s.name)
-        );
-        score += (matchedSkills.length / requiredSkills.length) * 50;
-      }
-
-      // Certification match score
-      if (certifications) {
-        const studentCerts = await Certification.find({ studentId: student._id });
-        const requiredCerts = certifications.split(',');
-        const matchedCerts = studentCerts.filter(c => 
-          requiredCerts.includes(c.name)
-        );
-        score += (matchedCerts.length / requiredCerts.length) * 30;
-      }
-
-      // Project count score
-      if (minProjects) {
-        const projectScore = Math.min(student.totalProjects / parseInt(minProjects), 1) * 20;
-        score += projectScore;
-      }
-
-      return {
-        ...student.toObject(),
-        matchScore: Math.round(score)
-      };
-    }));
-
-    // Sort by match score
-    scoredStudents.sort((a, b) => b.matchScore - a.matchScore);
-
-    res.json(scoredStudents);
-  } catch (error) {
-    console.error('Search students error:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-exports.getStudentDetails = async (req, res) => {
-  try {
-    const { studentId } = req.params;
-    
-    const student = await Student.findById(studentId);
-    if (!student) {
-      return res.status(404).json({ message: 'Student not found' });
-    }
-
-    const skills = await Skill.find({ studentId });
-    const projects = await Project.find({ studentId });
-    const certifications = await Certification.find({ studentId });
-    const achievements = await Achievement.find({ studentId });
+    // New students this month
+    const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+    const newThisMonth = await User.countDocuments({ role: 'student', createdAt: { $gte: startOfMonth } })
 
     res.json({
-      student,
-      skills,
-      projects,
-      certifications,
-      achievements
-    });
-  } catch (error) {
-    console.error('Get student details error:', error);
-    res.status(500).json({ message: 'Server error' });
+      totalStudents,
+      activeSkills,
+      avgCgpa: parseFloat(avgCgpa),
+      universities: uniList.length,
+      topSkills,
+      newThisMonth,
+    })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
   }
-};
+}
+
+// GET /api/employer/profile
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    res.json(formatUser(user))
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// PUT /api/employer/profile
+const updateProfile = async (req, res) => {
+  try {
+    const allowed = ['name', 'companyName', 'industry', 'location', 'website', 'description']
+    const updates = {}
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f] })
+
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true })
+    res.json(formatUser(user))
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/employer/search
+const searchTalent = async (req, res) => {
+  try {
+    const { q, skill, university, minCgpa, role: targetRole = 'Full Stack Developer', sortBy = 'match', page = 1, limit = 20 } = req.query
+
+    const filter = { role: 'student' }
+    if (university) filter.university = university
+    if (minCgpa)    filter.cgpa = { $gte: parseFloat(minCgpa) }
+    if (q) {
+      filter.$or = [
+        { name: { $regex: q, $options: 'i' } },
+        { university: { $regex: q, $options: 'i' } },
+        { department: { $regex: q, $options: 'i' } },
+      ]
+    }
+
+    let studentIds = null
+    if (skill) {
+      const matched = await Skill.find({ name: { $regex: skill, $options: 'i' } }).distinct('student')
+      studentIds = matched
+      filter._id = { $in: matched }
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit)
+    const [students, total] = await Promise.all([
+      User.find(filter).skip(skip).limit(parseInt(limit)),
+      User.countDocuments(filter),
+    ])
+
+    // Fetch intelligence data for all students
+    const studentIdsArr = students.map(s => s._id)
+    const [allSkills, allProjects, allCerts] = await Promise.all([
+      Skill.find({ student: { $in: studentIdsArr } }),
+      Project.find({ student: { $in: studentIdsArr } }),
+      Certification.find({ student: { $in: studentIdsArr } }),
+    ])
+
+    // Group by student ID
+    const skillsMap = {}, projectsMap = {}, certsMap = {}
+    allSkills.forEach(s => { if (!skillsMap[s.student]) skillsMap[s.student] = []; skillsMap[s.student].push(s) })
+    allProjects.forEach(p => { if (!projectsMap[p.student]) projectsMap[p.student] = []; projectsMap[p.student].push(p) })
+    allCerts.forEach(c => { if (!certsMap[c.student]) certsMap[c.student] = []; certsMap[c.student].push(c) })
+
+    // Compute readiness per student
+    const results = students.map(student => {
+      const sId = student._id.toString()
+      const skills    = skillsMap[sId]    || []
+      const projects  = projectsMap[sId]  || []
+      const certs     = certsMap[sId]     || []
+      const readiness = computeReadiness(student, skills, projects, certs, targetRole)
+      return {
+        ...formatUser(student),
+        readinessScore:    readiness.total,
+        readinessGrade:    readiness.grade,
+        matchedSkillCount: readiness.matchedSkills.length,
+        skillCount:        skills.length,
+        projectCount:      projects.length,
+      }
+    })
+
+    // Sort
+    results.sort((a, b) =>
+      sortBy === 'cgpa'
+        ? (b.cgpa || 0) - (a.cgpa || 0)
+        : b.readinessScore - a.readinessScore
+    )
+
+    res.json({ students: results, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/employer/student/:id
+const getStudentProfile = async (req, res) => {
+  try {
+    const targetRole = req.query.role || 'Full Stack Developer'
+    const student = await User.findById(req.params.id)
+    if (!student || student.role !== 'student') return res.status(404).json({ message: 'Student not found' })
+
+    const [skills, projects, certs] = await Promise.all([
+      Skill.find({ student: student._id }),
+      Project.find({ student: student._id }),
+      Certification.find({ student: student._id }),
+    ])
+
+    const readiness = computeReadiness(student, skills, projects, certs, targetRole)
+
+    res.json({ student: formatUser(student), skills, projects, certifications: certs, readiness })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+// GET /api/employer/stats
+const getPlatformStats = async (req, res) => {
+  try {
+    const [totalStudents, totalEmployers, totalSkills, totalProjects] = await Promise.all([
+      User.countDocuments({ role: 'student' }),
+      User.countDocuments({ role: 'employer' }),
+      Skill.countDocuments(),
+      Project.countDocuments(),
+    ])
+    res.json({ totalStudents, totalEmployers, totalSkills, totalProjects })
+  } catch (err) {
+    res.status(500).json({ message: err.message })
+  }
+}
+
+module.exports = { getDashboard, getProfile, updateProfile, searchTalent, getStudentProfile, getPlatformStats }

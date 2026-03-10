@@ -1,14 +1,16 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const employerController = require('../controllers/employerController');
+const express = require('express')
+const router = express.Router()
+const { protect, requireRole } = require('../middleware/auth')
+const ctrl = require('../controllers/employerController')
 
-router.use(auth);
+// All routes require auth + employer role
+router.use(protect, requireRole('employer'))
 
-router.get('/profile', employerController.getEmployerProfile);
-router.put('/profile', employerController.updateEmployerProfile);
+router.get('/dashboard',       ctrl.getDashboard)
+router.get('/profile',         ctrl.getProfile)
+router.put('/profile',         ctrl.updateProfile)
+router.get('/search',          ctrl.searchTalent)
+router.get('/student/:id',     ctrl.getStudentProfile)
+router.get('/stats',           ctrl.getPlatformStats)
 
-router.get('/search', employerController.searchStudents);
-router.get('/student/:studentId', employerController.getStudentDetails);
-
-module.exports = router;
+module.exports = router

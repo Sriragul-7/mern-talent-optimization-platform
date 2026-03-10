@@ -72,7 +72,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-2xl space-y-5">
+    <div className="max-w-2xl mx-auto space-y-5 px-4">
       {/* Profile summary card */}
       <Card className="p-6">
         <div className="flex items-center gap-5 mb-6">

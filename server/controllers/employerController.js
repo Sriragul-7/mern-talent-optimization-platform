@@ -179,4 +179,47 @@ const getPlatformStats = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }) }
 }
 
-module.exports = { getDashboard, searchTalent, getStudentProfile, getPlatformStats }
+
+// GET /api/employer/profile
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id)
+    if (!user) return res.status(404).json({ message: 'User not found' })
+    res.json({
+      _id:         user._id,
+      name:        user.name,
+      email:       user.email,
+      role:        user.role,
+      companyName: user.companyName  || '',
+      industry:    user.industry     || '',
+      location:    user.location     || '',
+      website:     user.website      || '',
+      description: user.description  || '',
+      employerStatus: user.employerStatus,
+    })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+}
+
+// PUT /api/employer/profile
+const updateProfile = async (req, res) => {
+  try {
+    const allowed = ['name', 'companyName', 'industry', 'location', 'website', 'description']
+    const updates = {}
+    allowed.forEach(f => { if (req.body[f] !== undefined) updates[f] = req.body[f] })
+    const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true })
+    res.json({
+      _id:         user._id,
+      name:        user.name,
+      email:       user.email,
+      role:        user.role,
+      companyName: user.companyName  || '',
+      industry:    user.industry     || '',
+      location:    user.location     || '',
+      website:     user.website      || '',
+      description: user.description  || '',
+      employerStatus: user.employerStatus,
+    })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+}
+
+module.exports = { getDashboard, getProfile, updateProfile, searchTalent, getStudentProfile, getPlatformStats }

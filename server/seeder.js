@@ -1,484 +1,468 @@
-const mongoose = require("mongoose")
-require("dotenv").config()
+/**
+ * SkillBridge — Rich Demo Seeder
+ * Run: node seeder.js
+ * 
+ * Creates:
+ *   • 1 admin account
+ *   • 5 employer accounts (approved)
+ *   • 50 student accounts across 10 universities, 6 departments
+ *     Each student gets 3–10 skills, 1–4 projects, 0–2 certifications
+ * 
+ * Default passwords: Admin123! / Employer123! / Student123!
+ */
 
-const User = require("./models/User")
-const Skill = require("./models/Skill")
-const Project = require("./models/Project")
-const Certification = require("./models/Certification")
+require('dotenv').config()
+const mongoose = require('mongoose')
+const bcrypt   = require('bcryptjs')
 
-mongoose.connect(process.env.MONGO_URI)
+const User          = require('./models/User')
+const Skill         = require('./models/Skill')
+const Project       = require('./models/Project')
+const Certification = require('./models/Certification')
 
-const STUDENTS = 500 // Increased for better analytics
-const seedEmails = []
+// ── Config ────────────────────────────────────────────────────────────────────
 
-// Enhanced Universities with locations and rankings
-const universities = [
-  { name: "Anna University", location: "Chennai", ranking: "A+" },
-  { name: "IIT Madras", location: "Chennai", ranking: "A++" },
-  { name: "NIT Trichy", location: "Trichy", ranking: "A+" },
-  { name: "VIT", location: "Vellore", ranking: "A" },
-  { name: "SRM", location: "Chennai", ranking: "A" },
-  { name: "PSG Tech", location: "Coimbatore", ranking: "A+" },
-  { name: "Amrita University", location: "Coimbatore", ranking: "A" },
-  { name: "BITS Pilani", location: "Pilani", ranking: "A++" },
-  { name: "Delhi University", location: "Delhi", ranking: "A+" },
-  { name: "MIT", location: "Chennai", ranking: "A" },
-  { name: "IIIT Hyderabad", location: "Hyderabad", ranking: "A++" },
-  { name: "IIT Bombay", location: "Mumbai", ranking: "A++" },
-  { name: "IIT Delhi", location: "Delhi", ranking: "A++" },
-  { name: "JNTU", location: "Hyderabad", ranking: "B+" },
-  { name: "KIIT", location: "Bhubaneswar", ranking: "A" }
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/skillbridge'
+
+// ── Reference data ─────────────────────────────────────────────────────────
+
+const UNIVERSITIES = [
+  'IIT Madras',
+  'NIT Trichy',
+  'Anna University',
+  'VIT Vellore',
+  'PSG College of Technology',
+  'SSN College of Engineering',
+  'Coimbatore Institute of Technology',
+  'Thiagarajar College of Engineering',
+  'Kongu Engineering College',
+  'SASTRA University',
 ]
 
-// Departments with more variety
-const departments = [
-  "Computer Science", "Information Technology", "AI & ML", 
-  "Data Science", "Cyber Security", "Electronics", 
-  "Electrical Engineering", "Mechanical", "Civil",
-  "Biotechnology", "Chemical Engineering", "Mathematics",
-  "Physics", "Robotics", "IoT"
+const DEPARTMENTS = [
+  'Computer Science and Engineering',
+  'Information Technology',
+  'Electronics and Communication',
+  'Electrical Engineering',
+  'Mechanical Engineering',
+  'Data Science',
 ]
 
-// Academic years
-const academicYears = [1, 2, 3, 4, 5]
+const SKILL_LEVELS = ['Beginner', 'Intermediate', 'Advanced', 'Expert']
 
-// Skill categories with proficiency levels and popularity metrics
-const skillGroups = {
-  frontend: {
-    skills: ["React", "Next.js", "Angular", "Vue", "Svelte", "HTML5", "CSS3", "Tailwind", "Bootstrap", "Material UI", "Redux", "Webpack"],
-    popularity: { beginner: 40, intermediate: 35, advanced: 20, expert: 5 }
-  },
-  backend: {
-    skills: ["Node.js", "Express", "Spring Boot", "Django", "Flask", "Laravel", "Ruby on Rails", "ASP.NET", "FastAPI", "GraphQL", "REST APIs", "Microservices"],
-    popularity: { beginner: 30, intermediate: 40, advanced: 25, expert: 5 }
-  },
-  programming: {
-    skills: ["JavaScript", "TypeScript", "Python", "Java", "C++", "Go", "Rust", "C#", "PHP", "Swift", "Kotlin", "Ruby", "Scala"],
-    popularity: { beginner: 25, intermediate: 40, advanced: 30, expert: 5 }
-  },
-  database: {
-    skills: ["MongoDB", "MySQL", "PostgreSQL", "Redis", "Firebase", "Elasticsearch", "Cassandra", "Oracle", "SQLite", "DynamoDB", "Neo4j"],
-    popularity: { beginner: 35, intermediate: 40, advanced: 20, expert: 5 }
-  },
-  ai: {
-    skills: ["Machine Learning", "Deep Learning", "TensorFlow", "PyTorch", "Computer Vision", "NLP", "LLMs", "Generative AI", "OpenAI", "LangChain", "Hugging Face", "Data Science"],
-    popularity: { beginner: 30, intermediate: 35, advanced: 25, expert: 10 }
-  },
-  devops: {
-    skills: ["Docker", "Kubernetes", "AWS", "Azure", "GCP", "CI/CD", "Linux", "Terraform", "Ansible", "Jenkins", "GitHub Actions", "Prometheus"],
-    popularity: { beginner: 25, intermediate: 35, advanced: 30, expert: 10 }
-  },
-  mobile: {
-    skills: ["React Native", "Flutter", "iOS", "Android", "Kotlin", "SwiftUI", "Xamarin", "Ionic"],
-    popularity: { beginner: 40, intermediate: 35, advanced: 20, expert: 5 }
-  },
-  testing: {
-    skills: ["Jest", "Mocha", "Cypress", "Selenium", "JUnit", "PyTest", "TestNG", "Postman", "JIRA"],
-    popularity: { beginner: 45, intermediate: 35, advanced: 15, expert: 5 }
-  },
-  cloud: {
-    skills: ["AWS", "Azure", "GCP", "Cloud Architecture", "Serverless", "Lambda", "EC2", "S3", "CloudFormation"],
-    popularity: { beginner: 30, intermediate: 35, advanced: 25, expert: 10 }
-  }
-}
-
-// Realistic project titles
-const projectTemplates = {
-  frontend: [
-    "E-commerce Platform", "Portfolio Website", "Dashboard UI", "Social Media App",
-    "Weather App", "Task Manager", "Chat Application", "Blog Platform"
+// Skills grouped by role focus
+const SKILL_POOLS = {
+  fullstack: [
+    { name: 'React.js',    category: 'Frontend' },
+    { name: 'Node.js',     category: 'Backend'  },
+    { name: 'TypeScript',  category: 'Language' },
+    { name: 'MongoDB',     category: 'Database' },
+    { name: 'Express.js',  category: 'Backend'  },
+    { name: 'REST API',    category: 'Backend'  },
+    { name: 'Next.js',     category: 'Frontend' },
+    { name: 'PostgreSQL',  category: 'Database' },
+    { name: 'Docker',      category: 'DevOps'   },
+    { name: 'Git',         category: 'Other'    },
+    { name: 'JavaScript',  category: 'Language' },
+    { name: 'TailwindCSS', category: 'Frontend' },
+    { name: 'Redis',       category: 'Database' },
+    { name: 'GraphQL',     category: 'Backend'  },
   ],
-  backend: [
-    "REST API Service", "Authentication System", "Payment Gateway", "Content Management System",
-    "Inventory Management", "Order Processing System", "Analytics Dashboard"
-  ],
-  ai: [
-    "Image Recognition System", "Chatbot Application", "Recommendation Engine",
-    "Sentiment Analysis Tool", "Fraud Detection System", "Predictive Model"
-  ],
-  mobile: [
-    "Fitness Tracker App", "Food Delivery App", "Ride Sharing App", "Note Taking App",
-    "Expense Tracker", "Meditation App", "Social Media Client"
+  data: [
+    { name: 'Python',           category: 'Language' },
+    { name: 'Machine Learning', category: 'AI/ML'    },
+    { name: 'Pandas',           category: 'AI/ML'    },
+    { name: 'NumPy',            category: 'AI/ML'    },
+    { name: 'TensorFlow',       category: 'AI/ML'    },
+    { name: 'PyTorch',          category: 'AI/ML'    },
+    { name: 'SQL',              category: 'Database' },
+    { name: 'Scikit-learn',     category: 'AI/ML'    },
+    { name: 'Statistics',       category: 'AI/ML'    },
+    { name: 'Tableau',          category: 'Other'    },
+    { name: 'Deep Learning',    category: 'AI/ML'    },
+    { name: 'NLP',              category: 'AI/ML'    },
+    { name: 'Feature Engineering', category: 'AI/ML' },
   ],
   devops: [
-    "CI/CD Pipeline", "Container Orchestration", "Cloud Migration", "Monitoring Solution",
-    "Infrastructure as Code", "Automated Deployment System"
-  ]
+    { name: 'Docker',          category: 'DevOps'   },
+    { name: 'Kubernetes',      category: 'DevOps'   },
+    { name: 'CI/CD',           category: 'DevOps'   },
+    { name: 'Linux',           category: 'Other'    },
+    { name: 'AWS',             category: 'DevOps'   },
+    { name: 'Terraform',       category: 'DevOps'   },
+    { name: 'Ansible',         category: 'DevOps'   },
+    { name: 'Bash Scripting',  category: 'Other'    },
+    { name: 'GitHub Actions',  category: 'DevOps'   },
+    { name: 'Prometheus',      category: 'DevOps'   },
+    { name: 'Grafana',         category: 'DevOps'   },
+  ],
+  mobile: [
+    { name: 'Flutter',         category: 'Mobile'   },
+    { name: 'Dart',            category: 'Language' },
+    { name: 'React Native',    category: 'Mobile'   },
+    { name: 'Firebase',        category: 'Database' },
+    { name: 'Kotlin',          category: 'Language' },
+    { name: 'Swift',           category: 'Language' },
+    { name: 'Android SDK',     category: 'Mobile'   },
+    { name: 'iOS SDK',         category: 'Mobile'   },
+    { name: 'Jetpack Compose', category: 'Mobile'   },
+    { name: 'SwiftUI',         category: 'Mobile'   },
+  ],
+  frontend: [
+    { name: 'React.js',    category: 'Frontend' },
+    { name: 'TypeScript',  category: 'Language' },
+    { name: 'JavaScript',  category: 'Language' },
+    { name: 'CSS',         category: 'Frontend' },
+    { name: 'HTML',        category: 'Frontend' },
+    { name: 'Next.js',     category: 'Frontend' },
+    { name: 'TailwindCSS', category: 'Frontend' },
+    { name: 'Figma',       category: 'Design'   },
+    { name: 'Jest',        category: 'Other'    },
+    { name: 'Redux',       category: 'Frontend' },
+  ],
+  security: [
+    { name: 'Cybersecurity',    category: 'Other'    },
+    { name: 'Linux',            category: 'Other'    },
+    { name: 'Ethical Hacking',  category: 'Other'    },
+    { name: 'Python',           category: 'Language' },
+    { name: 'Bash Scripting',   category: 'Other'    },
+    { name: 'Docker',           category: 'DevOps'   },
+    { name: 'Network Security', category: 'Other'    },
+  ],
 }
 
-// Technologies for projects
-const techStacks = {
-  frontend: ["React", "Next.js", "Vue", "Angular", "Tailwind", "Redux", "TypeScript", "Material UI"],
-  backend: ["Node.js", "Python", "Java", "Go", "Express", "Django", "Spring Boot", "PostgreSQL"],
-  database: ["MongoDB", "PostgreSQL", "MySQL", "Redis", "Firebase", "Elasticsearch"],
-  devops: ["Docker", "Kubernetes", "AWS", "Jenkins", "Terraform", "GitHub Actions"],
-  ai: ["TensorFlow", "PyTorch", "scikit-learn", "Pandas", "NumPy", "OpenCV", "NLTK"]
+// Projects per role
+const PROJECT_TEMPLATES = {
+  fullstack: [
+    { title: 'E-Commerce Platform',     tech: ['React.js', 'Node.js', 'MongoDB', 'Express.js'],         status: 'Completed'    },
+    { title: 'Task Management App',     tech: ['Next.js', 'TypeScript', 'PostgreSQL', 'REST API'],       status: 'Completed'    },
+    { title: 'Real-Time Chat App',      tech: ['React.js', 'Node.js', 'MongoDB', 'Socket.io'],           status: 'Completed'    },
+    { title: 'Blog CMS',                tech: ['Next.js', 'MongoDB', 'TailwindCSS', 'REST API'],         status: 'In Progress'  },
+    { title: 'Portfolio Website',       tech: ['React.js', 'TailwindCSS', 'JavaScript'],                 status: 'Completed'    },
+    { title: 'Inventory System',        tech: ['Node.js', 'PostgreSQL', 'Express.js', 'React.js'],       status: 'Completed'    },
+    { title: 'Job Board Platform',      tech: ['Next.js', 'MongoDB', 'TypeScript', 'Redis'],             status: 'In Progress'  },
+  ],
+  data: [
+    { title: 'Sentiment Analysis Tool', tech: ['Python', 'NLP', 'TensorFlow', 'Pandas'],                 status: 'Completed'    },
+    { title: 'House Price Predictor',   tech: ['Python', 'Scikit-learn', 'Pandas', 'NumPy'],             status: 'Completed'    },
+    { title: 'Customer Churn Model',    tech: ['Python', 'Machine Learning', 'Pandas', 'SQL'],           status: 'Completed'    },
+    { title: 'Stock Price Dashboard',   tech: ['Python', 'Pandas', 'Tableau', 'SQL'],                    status: 'In Progress'  },
+    { title: 'Image Classifier',        tech: ['Python', 'PyTorch', 'Deep Learning', 'NumPy'],           status: 'Completed'    },
+    { title: 'COVID Data Analysis',     tech: ['Python', 'Pandas', 'Statistics', 'Matplotlib'],          status: 'Completed'    },
+  ],
+  devops: [
+    { title: 'CI/CD Pipeline Setup',    tech: ['Docker', 'GitHub Actions', 'AWS'],                       status: 'Completed'    },
+    { title: 'K8s Microservices Deploy', tech: ['Kubernetes', 'Docker', 'Terraform', 'AWS'],             status: 'Completed'    },
+    { title: 'Infrastructure as Code',  tech: ['Terraform', 'AWS', 'Ansible'],                           status: 'Completed'    },
+    { title: 'Monitoring Dashboard',    tech: ['Prometheus', 'Grafana', 'Linux', 'Docker'],              status: 'In Progress'  },
+  ],
+  mobile: [
+    { title: 'Fitness Tracker App',     tech: ['Flutter', 'Dart', 'Firebase'],                           status: 'Completed'    },
+    { title: 'Food Delivery App',       tech: ['React Native', 'Firebase', 'REST API'],                  status: 'Completed'    },
+    { title: 'Notes App',               tech: ['Kotlin', 'Android SDK', 'Firebase'],                     status: 'Completed'    },
+    { title: 'Weather App',             tech: ['Flutter', 'Dart', 'REST API'],                           status: 'In Progress'  },
+    { title: 'E-Commerce Mobile App',   tech: ['React Native', 'REST API', 'JavaScript'],                status: 'Completed'    },
+  ],
+  frontend: [
+    { title: 'Admin Dashboard UI',      tech: ['React.js', 'TailwindCSS', 'TypeScript', 'Recharts'],     status: 'Completed'    },
+    { title: 'Design System Library',   tech: ['React.js', 'TypeScript', 'CSS', 'Storybook'],            status: 'In Progress'  },
+    { title: 'Landing Page Builder',    tech: ['Next.js', 'TailwindCSS', 'JavaScript'],                  status: 'Completed'    },
+    { title: 'Resume Builder App',      tech: ['React.js', 'CSS', 'JavaScript'],                        status: 'Completed'    },
+  ],
+  security: [
+    { title: 'Vulnerability Scanner',   tech: ['Python', 'Linux', 'Ethical Hacking'],                    status: 'Completed'    },
+    { title: 'Network Audit Tool',      tech: ['Python', 'Bash Scripting', 'Linux'],                     status: 'In Progress'  },
+  ],
 }
 
-// Certifications with categories
-const certifications = [
-  { name: "AWS Certified Cloud Practitioner", category: "Cloud", issuer: "AWS" },
-  { name: "AWS Solutions Architect", category: "Cloud", issuer: "AWS" },
-  { name: "Google Cloud Associate Engineer", category: "Cloud", issuer: "Google" },
-  { name: "Microsoft Azure Fundamentals", category: "Cloud", issuer: "Microsoft" },
-  { name: "Meta Frontend Developer", category: "Frontend", issuer: "Meta" },
-  { name: "Google UX Design", category: "Design", issuer: "Google" },
-  { name: "IBM Data Science", category: "Data Science", issuer: "IBM" },
-  { name: "Deep Learning Specialization", category: "AI", issuer: "DeepLearning.AI" },
-  { name: "TensorFlow Developer Certificate", category: "AI", issuer: "Google" },
-  { name: "Kubernetes Administrator", category: "DevOps", issuer: "CNCF" },
-  { name: "Docker Certified Associate", category: "DevOps", issuer: "Docker" },
-  { name: "CompTIA Security+", category: "Security", issuer: "CompTIA" },
-  { name: "CISSP", category: "Security", issuer: "ISC2" },
-  { name: "Oracle Certified Professional", category: "Database", issuer: "Oracle" },
-  { name: "MongoDB Certification", category: "Database", issuer: "MongoDB" },
-  { name: "Scrum Master", category: "Management", issuer: "Scrum Alliance" },
-  { name: "PMP", category: "Management", issuer: "PMI" }
+// Certifications
+const CERT_POOL = [
+  { name: 'AWS Certified Developer Associate',      issuer: 'Amazon Web Services' },
+  { name: 'Google Data Analytics Professional',     issuer: 'Google'              },
+  { name: 'Meta Front-End Developer Certificate',   issuer: 'Meta'                },
+  { name: 'MongoDB Developer Certification',        issuer: 'MongoDB'             },
+  { name: 'Microsoft Azure Fundamentals (AZ-900)',  issuer: 'Microsoft'           },
+  { name: 'Certified Kubernetes Administrator',     issuer: 'CNCF'                },
+  { name: 'TensorFlow Developer Certificate',       issuer: 'Google'              },
+  { name: 'Full Stack Web Development',             issuer: 'Coursera'            },
+  { name: 'Python for Data Science',                issuer: 'IBM'                 },
+  { name: 'React Developer Certification',          issuer: 'Udemy'               },
+  { name: 'AWS Machine Learning Specialty',         issuer: 'Amazon Web Services' },
+  { name: 'Ethical Hacking Certified',              issuer: 'EC-Council'          },
+  { name: 'Docker Certified Associate',             issuer: 'Docker'              },
+  { name: 'Flutter & Dart Development',             issuer: 'Udacity'             },
 ]
 
-// Achievement levels for students
-const achievementLevels = ["High Achiever", "Average", "Struggling", "Excellent", "Good"]
-
-// Companies for internships/jobs
-const companies = [
-  "Google", "Microsoft", "Amazon", "Meta", "Apple", "Netflix", "Uber",
-  "Flipkart", "Zomato", "Swiggy", "Paytm", "Razorpay", "Freshworks",
-  "Zoho", "TCS", "Infosys", "Wipro", "Accenture", "Deloitte", "PwC"
+// Employers
+const EMPLOYERS = [
+  {
+    name:        'Karthik Rajan',
+    email:       'karthik@techcorp.io',
+    companyName: 'TechCorp Solutions',
+    industry:    'Software / SaaS',
+    location:    'Bangalore, Karnataka',
+    website:     'https://techcorp.io',
+    description: 'Building next-gen SaaS tools for SMEs. Hiring full-stack and DevOps engineers.',
+  },
+  {
+    name:        'Priya Venkat',
+    email:       'priya@dataminds.ai',
+    companyName: 'DataMinds AI',
+    industry:    'Artificial Intelligence',
+    location:    'Chennai, Tamil Nadu',
+    website:     'https://dataminds.ai',
+    description: 'AI-first startup focusing on predictive analytics for the healthcare sector.',
+  },
+  {
+    name:        'Suresh Babu',
+    email:       'suresh@cloudzap.in',
+    companyName: 'CloudZap Technologies',
+    industry:    'Cloud Infrastructure',
+    location:    'Hyderabad, Telangana',
+    website:     'https://cloudzap.in',
+    description: 'Cloud-native infrastructure company. Looking for DevOps and backend engineers.',
+  },
+  {
+    name:        'Anitha Krishnan',
+    email:       'anitha@mobilex.co',
+    companyName: 'MobileX Studio',
+    industry:    'Mobile Applications',
+    location:    'Coimbatore, Tamil Nadu',
+    website:     'https://mobilex.co',
+    description: 'Award-winning mobile app studio with 50+ published apps. Hiring Flutter & React Native devs.',
+  },
+  {
+    name:        'Ramesh Sundaram',
+    email:       'ramesh@finbridge.com',
+    companyName: 'FinBridge Technologies',
+    industry:    'FinTech',
+    location:    'Mumbai, Maharashtra',
+    website:     'https://finbridge.com',
+    description: 'Digital lending platform processing ₹500Cr monthly. Building the engineering team.',
+  },
 ]
 
-// --------------------
-// STUDENT CREATOR
-// --------------------
-const createStudents = () => {
-  const students = []
-  
-  for(let i = 1; i <= STUDENTS; i++) {
-    const email = `student${i}@seed.com`
-    seedEmails.push(email)
-    
-    // Generate more realistic data
-    const age = 18 + Math.floor(Math.random() * 8) // 18-25
-    const cgpa = (5.5 + (Math.random() * 4)).toFixed(2) // 5.5 to 9.5
-    const academicYear = Math.floor(Math.random() * 4) + 1
-    
-    // Assign achievement based on CGPA
-    let achievement = "Average"
-    if(cgpa >= 8.5) achievement = "High Achiever"
-    else if(cgpa >= 7.5) achievement = "Good"
-    else if(cgpa < 6.0) achievement = "Struggling"
-    
-    // Some students have internship experience
-    const hasInternship = Math.random() > 0.7
-    const internshipCompany = hasInternship ? companies[Math.floor(Math.random() * companies.length)] : null
-    
-    // Students from different years have different skills counts
-    const skillCount = academicYear === 1 ? Math.floor(Math.random() * 3) + 2 : 
-                      academicYear === 2 ? Math.floor(Math.random() * 4) + 4 :
-                      academicYear === 3 ? Math.floor(Math.random() * 5) + 6 :
-                      Math.floor(Math.random() * 6) + 8
-    
-    const university = universities[Math.floor(Math.random() * universities.length)]
-    
-    students.push({
-      name: `Student ${i}`,
-      email,
-      password: "123456",
-      role: "student",
-      age,
-      cgpa: parseFloat(cgpa),
-      university: university.name,
-      universityLocation: university.location,
-      universityRanking: university.ranking,
-      department: departments[Math.floor(Math.random() * departments.length)],
-      academicYear,
-      achievement,
-      github: `https://github.com/student${i}`,
-      linkedin: `https://linkedin.com/in/student${i}`,
-      portfolio: Math.random() > 0.5 ? `https://student${i}.dev` : null,
-      bio: generateBio(academicYear, achievement, skillCount),
-      internshipCompany: internshipCompany,
-      internshipCompleted: hasInternship,
-      placementStatus: Math.random() > 0.8 ? "Placed" : "Not Placed", // Some are placed
-      placedCompany: Math.random() > 0.8 ? companies[Math.floor(Math.random() * companies.length)] : null,
-      expectedSalary: Math.floor(Math.random() * 20) + 5 + " LPA", // 5-25 LPA
-      skillsCount: skillCount,
-      projectsCount: academicYear === 1 ? Math.floor(Math.random() * 2) + 1 :
-                     academicYear === 2 ? Math.floor(Math.random() * 2) + 2 :
-                     academicYear === 3 ? Math.floor(Math.random() * 3) + 3 :
-                     Math.floor(Math.random() * 4) + 4,
-      certificationsCount: Math.floor(Math.random() * 4) // 0-3 certifications
-    })
-  }
-  
-  return students
+// 50 students — name, focus, cgpa, university, department
+const STUDENTS = [
+  // IIT Madras — top scorers
+  { name: 'Arjun Krishnamurthy', focus: 'fullstack', cgpa: 9.2, uniIdx: 0, deptIdx: 0 },
+  { name: 'Divya Raghunathan',   focus: 'data',      cgpa: 9.5, uniIdx: 0, deptIdx: 5 },
+  { name: 'Vikram Sundaresan',   focus: 'devops',    cgpa: 8.8, uniIdx: 0, deptIdx: 0 },
+  { name: 'Keerthi Balaji',      focus: 'frontend',  cgpa: 9.0, uniIdx: 0, deptIdx: 1 },
+  // NIT Trichy
+  { name: 'Rahul Murugan',       focus: 'fullstack', cgpa: 8.7, uniIdx: 1, deptIdx: 0 },
+  { name: 'Sneha Parthasarathy', focus: 'data',      cgpa: 8.9, uniIdx: 1, deptIdx: 5 },
+  { name: 'Arun Venkataraman',   focus: 'mobile',    cgpa: 8.4, uniIdx: 1, deptIdx: 0 },
+  { name: 'Lakshmi Subramaniam', focus: 'frontend',  cgpa: 8.6, uniIdx: 1, deptIdx: 1 },
+  { name: 'Bharath Chandrasekaran', focus: 'devops', cgpa: 8.1, uniIdx: 1, deptIdx: 0 },
+  // Anna University
+  { name: 'Preethi Narayanan',   focus: 'frontend',  cgpa: 7.8, uniIdx: 2, deptIdx: 1 },
+  { name: 'Naveen Kumar T',      focus: 'fullstack', cgpa: 8.2, uniIdx: 2, deptIdx: 0 },
+  { name: 'Geetha Ramachandran', focus: 'data',      cgpa: 8.0, uniIdx: 2, deptIdx: 5 },
+  { name: 'Suresh Mohan',        focus: 'devops',    cgpa: 7.5, uniIdx: 2, deptIdx: 2 },
+  { name: 'Revathi Dhandapani',  focus: 'mobile',    cgpa: 7.9, uniIdx: 2, deptIdx: 0 },
+  { name: 'Dinesh Arumugam',     focus: 'security',  cgpa: 8.3, uniIdx: 2, deptIdx: 0 },
+  // VIT Vellore
+  { name: 'Meenakshi Iyer',      focus: 'data',      cgpa: 8.8, uniIdx: 3, deptIdx: 5 },
+  { name: 'Kiran Shankar',       focus: 'fullstack', cgpa: 8.5, uniIdx: 3, deptIdx: 0 },
+  { name: 'Santhosh Pillai',     focus: 'mobile',    cgpa: 8.2, uniIdx: 3, deptIdx: 0 },
+  { name: 'Nivetha Rajendran',   focus: 'frontend',  cgpa: 8.7, uniIdx: 3, deptIdx: 1 },
+  { name: 'Praveen Muthukumar',  focus: 'devops',    cgpa: 8.0, uniIdx: 3, deptIdx: 0 },
+  { name: 'Saranya Gopalakrishnan', focus: 'data',   cgpa: 9.1, uniIdx: 3, deptIdx: 5 },
+  // PSG College
+  { name: 'Vijay Annamalai',     focus: 'fullstack', cgpa: 7.8, uniIdx: 4, deptIdx: 0 },
+  { name: 'Deepika Vasudevan',   focus: 'frontend',  cgpa: 8.1, uniIdx: 4, deptIdx: 1 },
+  { name: 'Harish Natarajan',    focus: 'devops',    cgpa: 7.6, uniIdx: 4, deptIdx: 2 },
+  { name: 'Kavitha Subramanian', focus: 'data',      cgpa: 8.4, uniIdx: 4, deptIdx: 5 },
+  // SSN College
+  { name: 'Manoj Sekar',         focus: 'mobile',    cgpa: 8.0, uniIdx: 5, deptIdx: 0 },
+  { name: 'Anusha Rengasamy',    focus: 'fullstack', cgpa: 7.9, uniIdx: 5, deptIdx: 0 },
+  { name: 'Gowtham Srinivasan',  focus: 'security',  cgpa: 8.2, uniIdx: 5, deptIdx: 0 },
+  { name: 'Pavithra Arjunan',    focus: 'frontend',  cgpa: 7.7, uniIdx: 5, deptIdx: 1 },
+  { name: 'Bala Krishnan M',     focus: 'data',      cgpa: 8.5, uniIdx: 5, deptIdx: 5 },
+  // CIT Coimbatore
+  { name: 'Ramya Sekar',         focus: 'fullstack', cgpa: 7.5, uniIdx: 6, deptIdx: 0 },
+  { name: 'Selva Kumar P',       focus: 'mobile',    cgpa: 7.8, uniIdx: 6, deptIdx: 0 },
+  { name: 'Thenmozhi Nair',      focus: 'data',      cgpa: 7.6, uniIdx: 6, deptIdx: 5 },
+  { name: 'Muthuraman A',        focus: 'devops',    cgpa: 7.3, uniIdx: 6, deptIdx: 2 },
+  { name: 'Pooja Saravanan',     focus: 'frontend',  cgpa: 7.9, uniIdx: 6, deptIdx: 1 },
+  // Thiagarajar College
+  { name: 'Senthil Kumar G',     focus: 'fullstack', cgpa: 8.1, uniIdx: 7, deptIdx: 0 },
+  { name: 'Lavanya Anand',       focus: 'data',      cgpa: 8.3, uniIdx: 7, deptIdx: 5 },
+  { name: 'Venkatesh Prabhu',    focus: 'devops',    cgpa: 7.8, uniIdx: 7, deptIdx: 0 },
+  { name: 'Sindhu Krishnaswamy', focus: 'frontend',  cgpa: 8.0, uniIdx: 7, deptIdx: 1 },
+  // Kongu Engineering
+  { name: 'Murugesan K',         focus: 'mobile',    cgpa: 7.4, uniIdx: 8, deptIdx: 0 },
+  { name: 'Ranjani Suresh',      focus: 'fullstack', cgpa: 7.7, uniIdx: 8, deptIdx: 0 },
+  { name: 'Aakash Rajaraman',    focus: 'security',  cgpa: 7.5, uniIdx: 8, deptIdx: 0 },
+  { name: 'Vijayalakshmi P',     focus: 'data',      cgpa: 7.8, uniIdx: 8, deptIdx: 5 },
+  { name: 'Kannan Muthusamy',    focus: 'devops',    cgpa: 7.2, uniIdx: 8, deptIdx: 2 },
+  // SASTRA University
+  { name: 'Jayashree Venkatesan', focus: 'frontend', cgpa: 8.2, uniIdx: 9, deptIdx: 1 },
+  { name: 'Subramanian A',        focus: 'fullstack', cgpa: 8.0, uniIdx: 9, deptIdx: 0 },
+  { name: 'Nithya Padmanabhan',   focus: 'data',      cgpa: 8.4, uniIdx: 9, deptIdx: 5 },
+  { name: 'Prasanna Kumar R',     focus: 'mobile',    cgpa: 7.9, uniIdx: 9, deptIdx: 0 },
+  { name: 'Devi Arulmozhi',       focus: 'security',  cgpa: 8.1, uniIdx: 9, deptIdx: 0 },
+  { name: 'Sivakumar Balakrishnan', focus: 'devops',  cgpa: 7.6, uniIdx: 9, deptIdx: 2 },
+]
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+
+const pick  = arr => arr[Math.floor(Math.random() * arr.length)]
+const picks = (arr, min, max) => {
+  const count = min + Math.floor(Math.random() * (max - min + 1))
+  const shuffled = [...arr].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, Math.min(count, arr.length))
 }
 
-// Generate realistic bio based on student profile
-function generateBio(year, achievement, skillCount) {
-  const bios = [
-    `${achievement} student passionate about building scalable applications. ${skillCount}+ technologies explored.`,
-    `Computer Science student with focus on full-stack development. Building real-world projects.`,
-    `Aspiring ${Math.random() > 0.5 ? 'AI/ML' : 'Cloud'} engineer with hands-on experience in modern tech stacks.`,
-    `${achievement} learner constantly exploring new technologies and frameworks. Open to collaborations.`,
-    `Tech enthusiast with ${skillCount}+ skills. Looking for opportunities in product-based companies.`,
-    `${year}th year student passionate about coding and problem-solving. ${skillCount} technologies mastered.`,
-    `Building innovative solutions to real-world problems. ${achievement} student with strong technical background.`
-  ]
-  return bios[Math.floor(Math.random() * bios.length)]
-}
+// ── Main ──────────────────────────────────────────────────────────────────────
 
-// --------------------
-// RANDOM PICK WITH WEIGHTS
-// --------------------
-function pickRandomWeighted(arr, count, weights = null) {
-  const shuffled = [...arr].sort(() => 0.5 - Math.random())
-  return shuffled.slice(0, count)
-}
-
-function getSkillLevel(skillCategory) {
-  const pop = skillGroups[skillCategory].popularity
-  const rand = Math.random() * 100
-  
-  if(rand < pop.expert) return "Expert"
-  if(rand < pop.expert + pop.advanced) return "Advanced"
-  if(rand < pop.expert + pop.advanced + pop.intermediate) return "Intermediate"
-  return "Beginner"
-}
-
-// Generate project description
-function generateProjectDescription(techs) {
-  const descriptions = [
-    `Built using ${techs.join(', ')}. Implemented authentication, real-time updates, and responsive design.`,
-    `Full-stack application with ${techs[0]} and ${techs[1]}. Features include user management and analytics.`,
-    `Scalable solution leveraging ${techs.join(', ')}. Deployed on cloud with CI/CD pipeline.`,
-    `Modern web application showcasing ${techs[0]} integration with ${techs[1]} backend.`,
-    `Industry-grade project with ${techs[0]}, ${techs[1]}, and ${techs[2]}. Followed best practices.`
-  ]
-  return descriptions[Math.floor(Math.random() * descriptions.length)]
-}
-
-// --------------------
-// IMPORT DATA
-// --------------------
-const importData = async () => {
+async function seed() {
   try {
-    console.log("🧹 Cleaning existing data...")
-    
+    await mongoose.connect(MONGO_URI)
+    console.log('✅ Connected to MongoDB:', MONGO_URI)
+
     // Clear existing data
-    await User.deleteMany({ email: { $in: seedEmails } })
-    await Skill.deleteMany({})
-    await Project.deleteMany({})
-    await Certification.deleteMany({})
-    
-    console.log("👥 Creating students...")
-    const students = createStudents()
-    const users = await User.insertMany(students)
-    
-    console.log("📚 Creating skills, projects, and certifications...")
-    
-    const skills = []
-    const projects = []
-    const certifications_data = []
-    
-    for(let i = 0; i < users.length; i++) {
-      const user = users[i]
-      
-      // Determine student's primary specialization
-      const categoryWeights = {
-        frontend: 0.2, backend: 0.2, programming: 0.15, database: 0.1,
-        ai: 0.15, devops: 0.1, mobile: 0.05, testing: 0.03, cloud: 0.02
-      }
-      
-      // Pick specialization based on academic year and CGPA
-      let primaryCategory
-      if(user.cgpa > 8.0 && user.academicYear > 2) {
-        // High performers in later years tend to specialize in AI/Cloud/DevOps
-        const advancedCats = ["ai", "devops", "cloud", "backend"]
-        primaryCategory = advancedCats[Math.floor(Math.random() * advancedCats.length)]
-      } else if(user.academicYear < 3) {
-        // Junior students stick to basics
-        const basicCats = ["programming", "frontend", "database"]
-        primaryCategory = basicCats[Math.floor(Math.random() * basicCats.length)]
-      } else {
-        // Others have varied specializations
-        const categories = Object.keys(skillGroups)
-        primaryCategory = categories[Math.floor(Math.random() * categories.length)]
-      }
-      
-      // Generate skills
-      const primarySkills = pickRandomWeighted(skillGroups[primaryCategory].skills, 
-        user.academicYear > 2 ? 4 : 2)
-      
-      // Add secondary skills from other categories
-      const otherCategories = Object.keys(skillGroups).filter(c => c !== primaryCategory)
-      const secondaryCategory = otherCategories[Math.floor(Math.random() * otherCategories.length)]
-      const secondarySkills = pickRandomWeighted(skillGroups[secondaryCategory].skills, 2)
-      
-      const allSkills = [...primarySkills, ...secondarySkills]
-      
-      // Create skills with appropriate levels
-      allSkills.forEach(skillName => {
-        let level
-        if(primarySkills.includes(skillName)) {
-          // Primary skills are more advanced
-          level = user.academicYear > 2 ? 
-            ["Intermediate", "Advanced", "Expert"][Math.floor(Math.random() * 3)] :
-            ["Beginner", "Intermediate", "Advanced"][Math.floor(Math.random() * 3)]
-        } else {
-          // Secondary skills are beginner to intermediate
-          level = ["Beginner", "Intermediate"][Math.floor(Math.random() * 2)]
-        }
-        
-        skills.push({
-          student: user._id,
-          name: skillName,
-          category: primarySkills.includes(skillName) ? primaryCategory : secondaryCategory,
-          level,
-          experience: user.academicYear > 2 ? Math.floor(Math.random() * 2) + 1 : Math.floor(Math.random() * 2),
-          verified: Math.random() > 0.7 // Some skills are verified through tests
-        })
+    await Promise.all([
+      User.deleteMany({}),
+      Skill.deleteMany({}),
+      Project.deleteMany({}),
+      Certification.deleteMany({}),
+    ])
+    console.log('🗑  Cleared existing data')
+
+    const hashedStudentPass  = await bcrypt.hash('Student123!', 12)
+    const hashedEmployerPass = await bcrypt.hash('Employer123!', 12)
+    const hashedAdminPass    = await bcrypt.hash('Admin123!', 12)
+
+    // ── Admin ──────────────────────────────────────────────────────────────
+    await User.create({
+      name:     'SkillBridge Admin',
+      email:    'admin@skillbridge.in',
+      password: hashedAdminPass,
+      role:     'admin',
+    })
+    console.log('👤 Admin created  → admin@skillbridge.in / Admin123!')
+
+    // ── Employers ──────────────────────────────────────────────────────────
+    for (const emp of EMPLOYERS) {
+      await User.create({
+        ...emp,
+        password:       hashedEmployerPass,
+        role:           'employer',
+        employerStatus: 'approved',
       })
-      
-      // Generate projects
-      const projectCount = user.academicYear === 1 ? 1 :
-                          user.academicYear === 2 ? 2 :
-                          user.academicYear === 3 ? 3 : 4
-      
-      for(let p = 0; p < projectCount; p++) {
-        const category = Object.keys(projectTemplates)[Math.floor(Math.random() * Object.keys(projectTemplates).length)]
-        const template = projectTemplates[category][Math.floor(Math.random() * projectTemplates[category].length)]
-        
-        // Pick relevant tech stack
-        const techs = []
-        const techCategory = Object.keys(techStacks)[Math.floor(Math.random() * Object.keys(techStacks).length)]
-        for(let t = 0; t < 3; t++) {
-          const tech = techStacks[techCategory][Math.floor(Math.random() * techStacks[techCategory].length)]
-          if(!techs.includes(tech)) techs.push(tech)
-        }
-        
-        const isTeamProject = Math.random() > 0.4
-        const teamSize = isTeamProject ? Math.floor(Math.random() * 3) + 2 : 1
-        
-        projects.push({
-          student: user._id,
-          title: `${template} ${p+1}`,
-          description: generateProjectDescription(techs),
-          tech: techs,
-          github: `https://github.com/student${i+1}/project${p+1}`,
-          liveDemo: Math.random() > 0.5 ? `https://project${p+1}.vercel.app` : null,
-          status: Math.random() > 0.2 ? "Completed" : "In Progress",
-          startDate: new Date(2023, Math.floor(Math.random() * 12), 1),
-          endDate: Math.random() > 0.3 ? new Date(2024, Math.floor(Math.random() * 12), 1) : null,
-          teamProject: isTeamProject,
-          teamSize,
-          stars: Math.floor(Math.random() * 50),
-          forks: Math.floor(Math.random() * 20),
-          category
-        })
-      }
-      
-      // Generate certifications
-      const certCount = user.academicYear === 1 ? Math.floor(Math.random() * 2) :
-                       user.academicYear === 2 ? Math.floor(Math.random() * 3) :
-                       user.academicYear === 3 ? Math.floor(Math.random() * 4) :
-                       Math.floor(Math.random() * 5)
-      
-      for(let c = 0; c < certCount; c++) {
-        const cert = certifications[Math.floor(Math.random() * certifications.length)]
-        const issueDate = new Date(2024, Math.floor(Math.random() * 12), 1)
-        const expiryDate = cert.category === "Cloud" || cert.category === "Security" ? 
-          new Date(2027, Math.floor(Math.random() * 12), 1) : null
-        
-        certifications_data.push({
-          student: user._id,
-          name: cert.name,
-          issuer: cert.issuer,
-          issueDate,
-          expiryDate,
-          credentialId: `CERT-${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-          credentialUrl: Math.random() > 0.3 ? `https://credential.com/${Math.random().toString(36)}` : null,
-          category: cert.category,
-          verified: Math.random() > 0.2 // Most certifications are verified
-        })
-      }
-      
-      // Log progress every 100 students
-      if((i + 1) % 100 === 0) {
-        console.log(`  Processed ${i + 1}/${users.length} students`)
-      }
     }
-    
-    console.log("💾 Saving skills...")
-    await Skill.insertMany(skills)
-    
-    console.log("💾 Saving projects...")
-    await Project.insertMany(projects)
-    
-    console.log("💾 Saving certifications...")
-    await Certification.insertMany(certifications_data)
-    
-    // Generate statistics for verification
-    console.log("\n📊 SEED DATA SUMMARY")
-    console.log("===================")
-    console.log(`✅ Students: ${users.length}`)
-    console.log(`✅ Skills: ${skills.length} (Avg: ${(skills.length/users.length).toFixed(1)} per student)`)
-    console.log(`✅ Projects: ${projects.length} (Avg: ${(projects.length/users.length).toFixed(1)} per student)`)
-    console.log(`✅ Certifications: ${certifications_data.length} (Avg: ${(certifications_data.length/users.length).toFixed(1)} per student)`)
-    
-    // Achievement distribution
-    const achievementCounts = {}
-    users.forEach(u => {
-      achievementCounts[u.achievement] = (achievementCounts[u.achievement] || 0) + 1
-    })
-    console.log("\n📈 Achievement Distribution:")
-    Object.keys(achievementCounts).forEach(key => {
-      console.log(`  ${key}: ${achievementCounts[key]} (${((achievementCounts[key]/users.length)*100).toFixed(1)}%)`)
-    })
-    
-    // Placement stats
-    const placed = users.filter(u => u.placementStatus === "Placed").length
-    console.log(`\n💼 Placement: ${placed} students placed (${((placed/users.length)*100).toFixed(1)}%)`)
-    
-    console.log("\n✅ Seeding completed successfully!")
-    
-    process.exit()
-    
-  } catch(err) {
-    console.error("❌ Error:", err)
+    console.log(`🏢 ${EMPLOYERS.length} employers created  → password: Employer123!`)
+
+    // ── Students ───────────────────────────────────────────────────────────
+    let skillCount = 0, projectCount = 0, certCount = 0
+
+    for (let i = 0; i < STUDENTS.length; i++) {
+      const s = STUDENTS[i]
+      const emailSlug = s.name.toLowerCase().replace(/\s+/g, '.').replace(/[^a-z.]/g, '')
+      const age = 20 + Math.floor(Math.random() * 4) // 20–23
+
+      const student = await User.create({
+        name:       s.name,
+        email:      `${emailSlug}@student.ac.in`,
+        password:   hashedStudentPass,
+        role:       'student',
+        age,
+        cgpa:       s.cgpa,
+        university: UNIVERSITIES[s.uniIdx],
+        department: DEPARTMENTS[s.deptIdx],
+        github:     `https://github.com/${emailSlug}`,
+        linkedin:   `https://linkedin.com/in/${emailSlug}`,
+        bio:        `${s.focus.charAt(0).toUpperCase() + s.focus.slice(1)} developer student from ${UNIVERSITIES[s.uniIdx]}.`,
+      })
+
+      // Skills — pick 5–10 from focus pool + 0–2 from another pool
+      const mainPool  = SKILL_POOLS[s.focus] || SKILL_POOLS.fullstack
+      const crossKeys = Object.keys(SKILL_POOLS).filter(k => k !== s.focus)
+      const crossPool = SKILL_POOLS[pick(crossKeys)] || []
+
+      const selectedSkills = [
+        ...picks(mainPool, 4, 8),
+        ...picks(crossPool, 0, 2),
+      ]
+      // deduplicate by name
+      const uniqueSkills = selectedSkills.filter((sk, idx, arr) =>
+        arr.findIndex(x => x.name === sk.name) === idx
+      )
+
+      for (const sk of uniqueSkills) {
+        // Higher cgpa students tend to have higher skill levels
+        const levelIdx = s.cgpa >= 9.0 ? 2 + Math.floor(Math.random() * 2)
+                       : s.cgpa >= 8.0 ? 1 + Math.floor(Math.random() * 2)
+                       : Math.floor(Math.random() * 2)
+        await Skill.create({
+          student:  student._id,
+          name:     sk.name,
+          category: sk.category,
+          level:    SKILL_LEVELS[Math.min(levelIdx, SKILL_LEVELS.length - 1)],
+        })
+        skillCount++
+      }
+
+      // Projects — pick 1–3 from focus pool + maybe 1 from another
+      const projPool = PROJECT_TEMPLATES[s.focus] || PROJECT_TEMPLATES.fullstack
+      const selectedProjs = picks(projPool, 1, 3)
+      for (const p of selectedProjs) {
+        await Project.create({
+          student:     student._id,
+          title:       p.title,
+          description: `${p.title} built using ${p.tech.slice(0, 3).join(', ')}. A project demonstrating ${s.focus} skills.`,
+          tech:        p.tech,
+          github:      `https://github.com/${emailSlug}/${p.title.toLowerCase().replace(/\s+/g, '-')}`,
+          status:      p.status,
+        })
+        projectCount++
+      }
+
+      // Certifications — 0–2, higher cgpa = more likely
+      const certChance = s.cgpa >= 8.5 ? 2 : s.cgpa >= 7.5 ? 1 : 0
+      const selectedCerts = picks(CERT_POOL, 0, certChance)
+      for (const c of selectedCerts) {
+        const year  = 2023 + Math.floor(Math.random() * 2)
+        const month = 1 + Math.floor(Math.random() * 12)
+        await Certification.create({
+          student:      student._id,
+          name:         c.name,
+          issuer:       c.issuer,
+          date:         new Date(year, month - 1, 1),
+          credentialId: `CERT-${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+          url:          `https://credentials.example.com/verify/${Math.random().toString(36).substring(2, 12)}`,
+        })
+        certCount++
+      }
+
+      if ((i + 1) % 10 === 0) console.log(`  ✓ ${i + 1}/${STUDENTS.length} students seeded…`)
+    }
+
+    console.log('\n═══════════════════════════════════════════')
+    console.log('✅  SEEDING COMPLETE')
+    console.log('───────────────────────────────────────────')
+    console.log(`👥  Students:       ${STUDENTS.length}`)
+    console.log(`🏢  Employers:      ${EMPLOYERS.length}`)
+    console.log(`🛠   Skills:         ${skillCount}`)
+    console.log(`📁  Projects:       ${projectCount}`)
+    console.log(`🎓  Certifications: ${certCount}`)
+    console.log('───────────────────────────────────────────')
+    console.log('Login credentials:')
+    console.log('  Admin    → admin@skillbridge.in     / Admin123!')
+    console.log('  Employer → karthik@techcorp.io      / Employer123!')
+    console.log('  Employer → priya@dataminds.ai       / Employer123!')
+    console.log('  Student  → arjun.krishnamurthy@student.ac.in / Student123!')
+    console.log('  (All students share password: Student123!)')
+    console.log('═══════════════════════════════════════════\n')
+
+    process.exit(0)
+  } catch (err) {
+    console.error('❌ Seeder error:', err.message)
+    console.error(err.stack)
     process.exit(1)
   }
 }
 
-// --------------------
-// DELETE DATA
-// --------------------
-const destroyData = async () => {
-  try {
-    console.log("🗑  Removing seed data...")
-    
-    const users = await User.find({ email: { $in: seedEmails } })
-    const ids = users.map(u => u._id)
-    
-    await Skill.deleteMany({ student: { $in: ids } })
-    await Project.deleteMany({ student: { $in: ids } })
-    await Certification.deleteMany({ student: { $in: ids } })
-    await User.deleteMany({ _id: { $in: ids } })
-    
-    console.log(`✅ Removed ${users.length} students and related data`)
-    process.exit()
-    
-  } catch(err) {
-    console.error("❌ Error:", err)
-    process.exit(1)
-  }
-}
-
-// --------------------
-// MAIN
-// --------------------
-if(process.argv[2] === "-d") {
-  destroyData()
-} else {
-  console.log("🌱 Starting seed process...")
-  importData()
-}
+seed()

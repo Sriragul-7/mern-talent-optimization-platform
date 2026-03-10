@@ -23,13 +23,31 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['student', 'employer'],
+    enum: ['student', 'employer', 'admin'],
     default: 'student',
   },
-  // Employer-specific
-  companyName: { type: String, trim: true },
 
-  // Student-specific profile fields
+  // ── Employer-specific ──────────────────────────────────────────────────────
+  companyName:  { type: String, trim: true },
+  industry:     { type: String, trim: true },
+  location:     { type: String, trim: true },
+  website:      { type: String, trim: true },
+  description:  { type: String, trim: true },
+
+  // Employer verification status
+  // 'approved' → can login and use portal
+  // 'pending'  → registered but not yet verified by SkillBridge team
+  // 'rejected' → application denied
+  employerStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'approved', // set to 'pending' when full verification is enforced
+  },
+
+  // Proof PDF filename (employer only)
+  proofDocument: { type: String },
+
+  // ── Student-specific ──────────────────────────────────────────────────────
   age:        { type: Number },
   cgpa:       { type: Number, min: 0, max: 10 },
   university: { type: String, trim: true },
@@ -37,9 +55,8 @@ const userSchema = new mongoose.Schema({
   github:     { type: String, trim: true },
   linkedin:   { type: String, trim: true },
   bio:        { type: String, trim: true },
-}, {
-  timestamps: true,
-})
+
+}, { timestamps: true })
 
 // Hash password before save
 userSchema.pre('save', async function (next) {

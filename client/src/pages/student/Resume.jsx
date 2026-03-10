@@ -134,9 +134,6 @@ export default function Resume() {
               <Mail size={11} /> {user.email || 'email@example.com'}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Phone size={11} /> {user.phone || '123-456-7890'}
-            </span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Linkedin size={11} /> {user.linkedin?.replace('https://www.linkedin.com/in/', '') || 'linkedin.com/in/username'}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

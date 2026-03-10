@@ -3,9 +3,15 @@ const Skill = require('../models/Skill')
 const Project = require('../models/Project')
 const Certification = require('../models/Certification')
 const { formatUser } = require('../utils/jwt')
-const { generateRecommendations, analyseSkillGap, AVAILABLE_ROLES } = require('../utils/recommendations')
-const { computeReadiness, generateActionPlan, computeAllRoles, ROLE_SKILL_MAP } = require('../utils/readiness')
+const { generateRecommendations, analyseSkillGap } = require('../utils/recommendations')
 
+const { 
+  computeReadiness, 
+  generateActionPlan, 
+  computeAllRoles, 
+  ROLE_SKILL_MAP, 
+  AVAILABLE_ROLES 
+} = require('../utils/readiness')
 // ─── Profile ────────────────────────────────────────────────────────────────
 
 const getProfile = async (req, res) => {
@@ -225,10 +231,10 @@ const getSkillGap = async (req, res) => {
         required: 3,
         impact: g.impact,
       })),
-      strengths: readiness.matchedSkills.filter(s => ['Advanced','Expert','Master'].includes(s.level)).map(s => s.name),
+      strengths: readiness.matchedSkills.map(s => s.name),
       breakdown: readiness.breakdown,
       grade: readiness.grade,
-      availableRoles: Object.keys(ROLE_SKILL_MAP),
+      availableRoles: AVAILABLE_ROLES,
     })
   } catch (err) { res.status(500).json({ message: err.message }) }
 }
@@ -247,7 +253,7 @@ const getReadiness = async (req, res) => {
     ])
     const readiness = computeReadiness(user, skills, projects, certs, role)
     const allRoles = computeAllRoles(user, skills, projects, certs)
-    res.json({ ...readiness, allRoles, availableRoles: Object.keys(ROLE_SKILL_MAP) })
+    res.json({ ...readiness, allRoles, availableRoles: AVAILABLE_ROLES })
   } catch (err) { res.status(500).json({ message: err.message }) }
 }
 

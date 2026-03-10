@@ -1,4 +1,5 @@
 require('dotenv').config()
+const path = require('path')
 const express = require('express')
 const cors = require('cors')
 const morgan = require('morgan')
@@ -22,6 +23,10 @@ if (process.env.NODE_ENV === 'development') app.use(morgan('dev'))
 app.use('/api/auth',     require('./routes/auth'))
 app.use('/api/student',  require('./routes/student'))
 app.use('/api/employer', require('./routes/employer'))
+app.use('/api/admin',    require('./routes/admin'))
+
+// Serve uploaded proof PDFs (protected via admin route, but also direct for dev)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 
 // Health check
 app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }))
