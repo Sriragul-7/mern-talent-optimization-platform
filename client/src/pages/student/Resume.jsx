@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { Download } from 'lucide-react'
+import { Download, Mail, Phone, Github, Linkedin } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { studentService } from '../../services/api'
 import { formatDate } from '../../utils/helpers'
@@ -25,11 +25,21 @@ export default function Resume() {
       const name = (data?.user?.name || 'Resume').replace(/\s+/g, '_')
       await html2pdf()
         .set({
-          margin: 0,
+          margin: [0, 0, 0, 0],
           filename: `${name}_Resume.pdf`,
-          image: { type: 'jpeg', quality: 0.99 },
-          html2canvas: { scale: 3, useCORS: true, logging: false },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            letterRendering: true
+          },
+          jsPDF: { 
+            unit: 'mm', 
+            format: 'a4', 
+            orientation: 'portrait',
+            compress: true
+          },
         })
         .from(resumeRef.current)
         .save()
@@ -47,15 +57,15 @@ export default function Resume() {
 
   const { user = {}, skills = [], projects = [], certifications = [] } = data || {}
 
-  // Group skills by domain
-  const skillGroups = skills.reduce((acc, s) => {
-    if (!acc[s.category]) acc[s.category] = []
-    acc[s.category].push(s)
+  // Group skills by their actual categories from the data
+  const skillGroups = skills.reduce((acc, skill) => {
+    const category = skill.category || 'Other'
+    if (!acc[category]) {
+      acc[category] = []
+    }
+    acc[category].push(skill.name)
     return acc
   }, {})
-
-  // Contact string
-  const contacts = [user.email, user.github?.replace('https://github.com/', 'github.com/'), user.linkedin?.replace('https://linkedin.com/in/', 'linkedin.com/in/')].filter(Boolean)
 
   return (
     <div className="space-y-4">
@@ -74,151 +84,284 @@ export default function Resume() {
         style={{
           width: '210mm',
           minHeight: '297mm',
+          height: '297mm',
           margin: '0 auto',
           backgroundColor: '#ffffff',
-          fontFamily: "'Arial', 'Helvetica Neue', Helvetica, sans-serif",
-          fontSize: '10pt',
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          fontSize: '10.5pt',
           lineHeight: '1.5',
-          color: '#1a1a1a',
-          padding: '18mm 18mm 14mm 18mm',
+          color: '#2c3e50',
+          padding: '15mm 20mm 15mm 20mm',
           boxSizing: 'border-box',
+          display: 'flex',
+          flexDirection: 'column',
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
         }}
       >
-        {/* ── NAME & CONTACT ── */}
-        <div style={{ borderBottom: '2px solid #1a1a1a', paddingBottom: '8px', marginBottom: '14px' }}>
-          <h1 style={{ fontSize: '22pt', fontWeight: '700', margin: '0 0 2px 0', letterSpacing: '-0.3px', color: '#0f172a' }}>
-            {user.name || 'Your Name'}
+        {/* Header - Name */}
+        <div style={{ marginBottom: '16px' }}>
+          <h1 style={{ 
+            fontSize: '24pt', 
+            fontWeight: '600', 
+            margin: '0 0 4px 0', 
+            letterSpacing: '0.5px',
+            color: '#1e293b',
+            lineHeight: '1.2',
+            textTransform: 'uppercase'
+          }}>
+            {user.name || 'YOUR NAME'}
           </h1>
-          <p style={{ fontSize: '11pt', fontWeight: '600', color: '#0ea5e9', margin: '0 0 6px 0' }}>
-            {user.department || 'Software Engineer'}
-            {user.university ? ` · ${user.university}` : ''}
+          <p style={{ 
+            fontSize: '11pt', 
+            fontWeight: '400', 
+            color: '#2563eb', 
+            margin: '0 0 8px 0'
+          }}>
+            {user.department || 'Full Stack Developer'}
           </p>
-          <p style={{ fontSize: '9pt', color: '#555', margin: 0 }}>
-            {contacts.join('  |  ')}
-          </p>
+          
+          {/* Contact Info */}
+          <div style={{ 
+            display: 'flex', 
+            flexWrap: 'wrap',
+            gap: '20px',
+            fontSize: '9.5pt',
+            color: '#4b5563',
+            borderBottom: '1px solid #e5e7eb',
+            paddingBottom: '10px'
+          }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Mail size={11} /> {user.email || 'email@example.com'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Phone size={11} /> {user.phone || '123-456-7890'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Linkedin size={11} /> {user.linkedin?.replace('https://www.linkedin.com/in/', '') || 'linkedin.com/in/username'}
+            </span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Github size={11} /> {user.github?.replace('https://github.com/', '') || 'github.com/username'}
+            </span>
+          </div>
         </div>
 
-        {/* ── SUMMARY ── */}
-        {user.bio && (
-          <div style={{ marginBottom: '14px' }}>
-            <SectionTitle text="Profile" />
-            <p style={{ fontSize: '10pt', color: '#333', margin: '4px 0 0 0', lineHeight: '1.6' }}>{user.bio}</p>
-          </div>
-        )}
+        {/* Main Content - Full width with proper spacing */}
+        <div style={{ 
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '18px'
+        }}>
+          {/* Career Objective */}
+          {user.bio && (
+            <div>
+              <SectionTitle text="CAREER OBJECTIVE" />
+              <p style={{ 
+                fontSize: '10pt', 
+                color: '#3a4a5c', 
+                margin: '8px 0 0 0', 
+                lineHeight: '1.6',
+                textAlign: 'justify'
+              }}>
+                {user.bio}
+              </p>
+            </div>
+          )}
 
-        {/* ── EDUCATION ── */}
-        {(user.university || user.cgpa) && (
-          <div style={{ marginBottom: '14px' }}>
-            <SectionTitle text="Education" />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '4px' }}>
-              <div>
-                <p style={{ fontWeight: '700', fontSize: '10.5pt', margin: '0 0 2px 0', color: '#0f172a' }}>
-                  {user.university || 'University'}
+          {/* Education */}
+          <div>
+            <SectionTitle text="EDUCATION" />
+            <div style={{ marginTop: '8px' }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'baseline',
+                marginBottom: '2px'
+              }}>
+                <p style={{ 
+                  fontWeight: '600', 
+                  fontSize: '11pt', 
+                  margin: 0,
+                  color: '#1e293b'
+                }}>
+                  {user.university || 'University Name'}
                 </p>
-                <p style={{ fontSize: '9.5pt', color: '#555', margin: 0 }}>
-                  B.Tech — {user.department || 'Computer Science'}
+                <p style={{ 
+                  fontSize: '10pt', 
+                  color: '#5f6b7a', 
+                  margin: 0,
+                  fontWeight: '500'
+                }}>
+                  {user.cgpa ? `CGPA - ${user.cgpa}` : ''}
                 </p>
               </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                {user.cgpa && (
-                  <p style={{ fontWeight: '700', fontSize: '10pt', color: '#0ea5e9', margin: '0 0 2px 0' }}>
-                    CGPA: {user.cgpa}
-                  </p>
-                )}
-                <p style={{ fontSize: '9pt', color: '#888', margin: 0 }}>2021 – 2025</p>
-              </div>
+              <p style={{ 
+                fontSize: '10.5pt', 
+                color: '#4a5a6e', 
+                margin: '2px 0'
+              }}>
+                BE - {user.department || 'Electronics and Communication Engineering'}
+              </p>
+              <p style={{ 
+                fontSize: '10pt', 
+                color: '#5f6b7a', 
+                margin: '2px 0 0 0'
+              }}>
+                {user.school || 'Additional School Information'} · {user.schoolPercentage || 'Percentage'}
+              </p>
             </div>
           </div>
-        )}
 
-        {/* ── TECHNICAL SKILLS ── */}
-        {skills.length > 0 && (
-          <div style={{ marginBottom: '14px' }}>
-            <SectionTitle text="Technical Skills" />
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '4px' }}>
-              <tbody>
-                {Object.entries(skillGroups).map(([domain, domainSkills]) => (
-                  <tr key={domain} style={{ verticalAlign: 'top' }}>
-                    <td style={{ width: '80px', fontWeight: '700', fontSize: '9.5pt', color: '#555', paddingBottom: '4px', paddingRight: '10px', whiteSpace: 'nowrap' }}>
-                      {domain}
-                    </td>
-                    <td style={{ fontSize: '9.5pt', color: '#1a1a1a', paddingBottom: '4px' }}>
-                      {domainSkills.map(s => `${s.name} (${s.level})`).join(' · ')}
-                    </td>
-                  </tr>
+          {/* Technical Skills - Using dynamic categories */}
+          {Object.keys(skillGroups).length > 0 && (
+            <div>
+              <SectionTitle text="TECHNICAL SKILLS" />
+              <div style={{ marginTop: '8px' }}>
+                {Object.entries(skillGroups).map(([category, skillsList]) => (
+                  <div key={category} style={{ 
+                    marginBottom: '8px',
+                    display: 'flex',
+                    gap: '12px'
+                  }}>
+                    <p style={{ 
+                      fontWeight: '600', 
+                      fontSize: '10.5pt', 
+                      color: '#1e293b',
+                      margin: 0,
+                      minWidth: '150px'
+                    }}>
+                      {category}:
+                    </p>
+                    <p style={{ 
+                      fontSize: '10.5pt', 
+                      color: '#4a5a6e', 
+                      margin: 0,
+                      flex: 1
+                    }}>
+                      {skillsList.join(', ')}
+                    </p>
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+              </div>
+            </div>
+          )}
 
-        {/* ── PROJECTS ── */}
-        {projects.length > 0 && (
-          <div style={{ marginBottom: '14px' }}>
-            <SectionTitle text="Projects" />
-            {projects.map((p, i) => (
-              <div key={p._id} style={{ marginTop: i === 0 ? '6px' : '10px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div style={{ flex: 1 }}>
-                    <span style={{ fontWeight: '700', fontSize: '10.5pt', color: '#0f172a' }}>{p.title}</span>
-                    {p.github && (
-                      <span style={{ fontSize: '8.5pt', color: '#888', marginLeft: '8px' }}>
-                        {p.github.replace('https://', '')}
+          {/* Projects */}
+          {projects.length > 0 && (
+            <div>
+              <SectionTitle text="PROJECTS" />
+              <div style={{ marginTop: '8px' }}>
+                {projects.map((p, i) => (
+                  <div key={p._id} style={{ 
+                    marginBottom: i === projects.length - 1 ? 0 : '18px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      marginBottom: '4px'
+                    }}>
+                      <p style={{ 
+                        fontWeight: '600', 
+                        fontSize: '11.5pt', 
+                        margin: 0,
+                        color: '#1e293b'
+                      }}>
+                        {p.title}
+                      </p>
+                      <span style={{
+                        fontSize: '9pt',
+                        fontWeight: '500',
+                        color: p.status === 'Completed' ? '#059669' : '#b45309',
+                      }}>
+                        {p.status}
                       </span>
+                    </div>
+                    
+                    {p.description && (
+                      <p style={{ 
+                        fontSize: '10pt', 
+                        color: '#4a5a6e', 
+                        margin: '0 0 4px 0',
+                        lineHeight: '1.5',
+                        textAlign: 'justify'
+                      }}>
+                        {p.description}
+                      </p>
                     )}
-                    {p.live && (
-                      <span style={{ fontSize: '8.5pt', color: '#0ea5e9', marginLeft: '6px' }}>
-                        {p.live.replace('https://', '')}
-                      </span>
+                    
+                    {p.tech?.length > 0 && (
+                      <p style={{ 
+                        fontSize: '9.5pt', 
+                        color: '#5f6b7a', 
+                        margin: '0 0 2px 0'
+                      }}>
+                        <span style={{ fontWeight: '600', color: '#3a4a5c' }}>Tech:</span> {p.tech.join(' - ')}
+                      </p>
+                    )}
+                    
+                    {p.github && (
+                      <p style={{ 
+                        fontSize: '9pt',
+                        color: '#2563eb',
+                        margin: '2px 0 0 0',
+                        fontFamily: 'monospace'
+                      }}>
+                        {p.github.replace('https://', '')}
+                      </p>
                     )}
                   </div>
-                  <span style={{
-                    fontSize: '8.5pt', fontWeight: '600', flexShrink: 0, marginLeft: '10px',
-                    color: p.status === 'Completed' ? '#059669' : '#d97706',
-                  }}>
-                    {p.status}
-                  </span>
-                </div>
-                {p.description && (
-                  <p style={{ fontSize: '9.5pt', color: '#444', margin: '3px 0', lineHeight: '1.5' }}>
-                    {p.description}
-                  </p>
-                )}
-                {p.tech?.length > 0 && (
-                  <p style={{ fontSize: '9pt', color: '#666', margin: '2px 0 0 0' }}>
-                    <span style={{ fontWeight: '600' }}>Tech:</span> {p.tech.join(', ')}
-                  </p>
-                )}
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
 
-        {/* ── CERTIFICATIONS ── */}
-        {certifications.length > 0 && (
-          <div style={{ marginBottom: '8px' }}>
-            <SectionTitle text="Certifications" />
-            {certifications.map((c, i) => (
-              <div key={c._id}
-                style={{
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
-                  marginTop: i === 0 ? '6px' : '6px',
-                }}>
-                <div>
-                  <p style={{ fontWeight: '700', fontSize: '10pt', color: '#0f172a', margin: 0 }}>{c.name}</p>
-                  <p style={{ fontSize: '9pt', color: '#666', margin: '1px 0 0 0' }}>
-                    {c.issuer}{c.credentialId ? ` · Credential ID: ${c.credentialId}` : ''}
-                  </p>
-                </div>
-                {c.date && (
-                  <span style={{ fontSize: '9pt', color: '#888', flexShrink: 0, marginLeft: '10px' }}>
-                    {formatDate(c.date)}
-                  </span>
-                )}
+          {/* Achievements / Certifications */}
+          {certifications.length > 0 && (
+            <div style={{ marginTop: 'auto' }}>
+              <SectionTitle text="CERTIFICATIONS" />
+              <div style={{ marginTop: '8px' }}>
+              
+                {/* Certifications */}
+                {certifications.map((c, i) => (
+                  <div key={c._id} style={{ 
+                    marginBottom: i === certifications.length - 1 ? 0 : '10px',
+                    display: 'flex',
+                    gap: '12px'
+                  }}>
+                    <p style={{ 
+                      fontWeight: '600', 
+                      fontSize: '10.5pt', 
+                      color: '#1e293b',
+                      margin: 0,
+                      minWidth: '120px'
+                    }}>
+                      {c.name}:
+                    </p>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ 
+                        fontSize: '10.5pt', 
+                        color: '#4a5a6e', 
+                      }}>
+                        {c.issuer}
+                        {c.credentialId && ` - ID: ${c.credentialId}`}
+                      </span>
+                      {c.date && (
+                        <span style={{ 
+                          fontSize: '9.5pt', 
+                          color: '#6b7a8c', 
+                          marginLeft: '8px'
+                        }}>
+                          {formatDate(c.date)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
@@ -226,11 +369,22 @@ export default function Resume() {
 
 function SectionTitle({ text }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '2px' }}>
-      <p style={{ fontSize: '10pt', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.8px', color: '#0f172a', margin: 0, flexShrink: 0 }}>
+    <div style={{ 
+      marginBottom: '2px'
+    }}>
+      <p style={{ 
+        fontSize: '12pt', 
+        fontWeight: '700', 
+        textTransform: 'uppercase', 
+        letterSpacing: '0.5px', 
+        color: '#1e293b', 
+        margin: '0 0 4px 0',
+        borderBottom: '2px solid #2563eb',
+        paddingBottom: '3px',
+        display: 'inline-block'
+      }}>
         {text}
       </p>
-      <div style={{ flex: 1, height: '1px', background: '#d1d5db' }} />
     </div>
   )
 }
