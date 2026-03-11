@@ -32,5 +32,6 @@ router.get('/skill-gap',       ctrl.getSkillGap)
 router.get('/readiness',       ctrl.getReadiness)
 router.get('/action-plan',     ctrl.getActionPlan)
 router.get('/resume',          ctrl.getResume)
+router.get('/compare',         ctrl.getCompare)
 
 module.exports = router

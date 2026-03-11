@@ -45,3 +45,8 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`))
+
+
+
+
+//tar --exclude=node_modules --exclude=.git --exclude=dist --exclude=.env -czf skillbridge-current.zip .

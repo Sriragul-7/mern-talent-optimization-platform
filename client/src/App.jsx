@@ -19,6 +19,7 @@ import Certifications   from './pages/student/Certifications'
 import SkillGap         from './pages/student/SkillGap'
 import ReadinessScore   from './pages/student/ReadinessScore'
 import ActionPlan       from './pages/student/ActionPlan'
+import Compare         from './pages/student/Compare'
 import Resume           from './pages/student/Resume'
 import Profile          from './pages/student/Profile'
 
@@ -26,6 +27,7 @@ import Profile          from './pages/student/Profile'
 import EmployerDashboard from './pages/employer/EmployerDashboard'
 import EmployerProfile   from './pages/employer/EmployerProfile'
 import SearchTalent      from './pages/employer/SearchTalent'
+import Shortlist        from './pages/employer/Shortlist'
 
 // Admin pages
 import AdminDashboard    from './pages/admin/AdminDashboard'
@@ -68,6 +70,7 @@ function AppRoutes() {
         <Route path="readiness"      element={<ReadinessScore />} />
         <Route path="action-plan"    element={<ActionPlan />} />
         <Route path="resume"         element={<Resume />} />
+        <Route path="compare"        element={<Compare />} />
         <Route path="profile"        element={<Profile />} />
       </Route>
 
@@ -77,6 +80,7 @@ function AppRoutes() {
         <Route path="dashboard"  element={<EmployerDashboard />} />
         <Route path="search"     element={<SearchTalent />} />
         <Route path="profile"    element={<EmployerProfile />} />
+        <Route path="shortlist"  element={<Shortlist />} />
       </Route>
 
       {/* Admin */}

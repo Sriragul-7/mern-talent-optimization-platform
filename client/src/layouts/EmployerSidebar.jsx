@@ -1,5 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, Search, LogOut, Moon, Sun, User } from 'lucide-react'
+import { LayoutDashboard, Search, LogOut, Moon, Sun, User, Bookmark } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
@@ -7,6 +7,7 @@ const NAV = [
   { to: '/employer/dashboard', icon: LayoutDashboard, label: 'Dashboard'     },
   { to: '/employer/search',    icon: Search,          label: 'Search Talent' },
   { to: '/employer/profile',   icon: User,            label: 'Company Profile'},
+  { to: '/employer/shortlist', icon: Bookmark,        label: 'Saved Profiles'  },
 ]
 
 export default function EmployerSidebar({ open, setOpen }) {

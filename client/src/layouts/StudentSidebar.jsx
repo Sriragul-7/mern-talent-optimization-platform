@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard, Layers, FolderKanban, Award, Target,
-  FileText, User, LogOut, Moon, Sun, TrendingUp, Rocket
+  FileText, User, LogOut, Moon, Sun, TrendingUp, Rocket, Users
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -15,6 +15,7 @@ const NAV = [
   { to: '/student/readiness',      icon: TrendingUp,      label: 'Readiness Score'},
   { to: '/student/action-plan',    icon: Rocket,          label: 'Action Plan'    },
   { to: '/student/resume',         icon: FileText,        label: 'Resume'         },
+  { to: '/student/compare',        icon: Users,           label: 'Compare'        },
   { to: '/student/profile',        icon: User,            label: 'Profile'        },
 ]
 

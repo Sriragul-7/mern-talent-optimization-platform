@@ -63,6 +63,7 @@ export const studentService = {
   getRecommendations: () => api.get('/student/recommendations'),
   getDashboardStats:  () => api.get('/student/dashboard'),
   getResume:          () => api.get('/student/resume'),
+  getCompare:         () => api.get('/student/compare'),
 }
 
 // ── Employer ──────────────────────────────────────────────────────────────────

@@ -1,0 +1,21 @@
+```svg
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+
+  <!-- background -->
+  <rect width="64" height="64" rx="12" fill="#0f172a"/>
+
+  <!-- graph -->
+  <polyline
+    points="10,45 22,35 34,38 46,22 56,16"
+    fill="none"
+    stroke="#38bdf8"
+    stroke-width="4"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- arrow -->
+  <polygon points="56,16 50,20 60,22" fill="#22c55e"/>
+
+</svg>
+```

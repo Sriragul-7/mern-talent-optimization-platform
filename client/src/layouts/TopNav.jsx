@@ -24,9 +24,6 @@ export default function TopNav({ onMenuClick, title, subtitle }) {
       className="sticky top-0 z-20 bg-white/95 dark:bg-surface-900/95 backdrop-blur-md"
       style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}
     >
-      {/* Thin gradient accent line */}
-      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-brand-500 via-accent-500 to-brand-400" />
-
       <div className="flex items-center h-[4.5rem] px-6 gap-5">
 
         {/* Mobile menu */}

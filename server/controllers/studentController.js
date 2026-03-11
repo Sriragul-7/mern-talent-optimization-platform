@@ -296,6 +296,128 @@ const getResume = async (req, res) => {
   } catch (err) { res.status(500).json({ message: err.message }) }
 }
 
+// ─── Compare (platform benchmark) ────────────────────────────────────────────
+// GET /api/student/compare
+
+const LEVEL_NUM = { Beginner: 1, Intermediate: 2, Advanced: 3, Expert: 4, Master: 4 }
+
+const getCompare = async (req, res) => {
+  try {
+    const [user, mySkills, myProjects, myCerts, totalStudents] = await Promise.all([
+      User.findById(req.user._id),
+      Skill.find({ student: req.user._id }),
+      Project.find({ student: req.user._id }),
+      Certification.find({ student: req.user._id }),
+      User.countDocuments({ role: 'student' }),
+    ])
+
+    // Platform-wide counts
+    const allStudents = await User.find({ role: 'student' }, 'cgpa _id')
+    const studentIds  = allStudents.map(s => s._id)
+
+    const [allSkillDocs, allProjectCount, allCertCount] = await Promise.all([
+      Skill.find({ student: { $in: studentIds } }, 'student name level'),
+      Project.countDocuments({ student: { $in: studentIds } }),
+      Certification.countDocuments({ student: { $in: studentIds } }),
+    ])
+
+    const skillsPerStudent = {}
+    allSkillDocs.forEach(sk => {
+      const id = sk.student.toString()
+      if (!skillsPerStudent[id]) skillsPerStudent[id] = []
+      skillsPerStudent[id].push(sk)
+    })
+
+    const n = totalStudents || 1
+    const avgSkills   = Object.values(skillsPerStudent).reduce((s, a) => s + a.length, 0) / n
+    const avgProjects = allProjectCount / n
+    const avgCerts    = allCertCount    / n
+    const cgpaList    = allStudents.map(s => s.cgpa).filter(Boolean)
+    const avgCgpa     = cgpaList.length > 0 ? cgpaList.reduce((a, b) => a + b, 0) / cgpaList.length : 0
+
+    // Per-skill level comparison
+    const skillComparison = await Promise.all(
+      mySkills.map(async sk => {
+        const platformSkills = await Skill.find({ name: sk.name }, 'level')
+        const levels = platformSkills.map(s => LEVEL_NUM[s.level] || 1)
+        const platformAvg = levels.length > 0 ? levels.reduce((a, b) => a + b, 0) / levels.length : 1
+        return {
+          skill:             sk.name,
+          yourLevel:         LEVEL_NUM[sk.level] || 1,
+          yourLevelLabel:    sk.level,
+          platformAvg:       parseFloat(platformAvg.toFixed(2)),
+          studentsWithSkill: levels.length,
+        }
+      })
+    )
+
+    // Role readiness comparison — sample up to 50 students for performance
+    const TOP_ROLES = [
+      'Full Stack Developer', 'Frontend Developer', 'Backend Developer',
+      'Data Scientist', 'DevOps Engineer', 'Mobile Developer',
+    ]
+
+    const myAllRoles = computeAllRoles(user, mySkills, myProjects, myCerts)
+    const myRoleMap  = {}
+    myAllRoles.forEach(r => { myRoleMap[r.role] = r.total })
+
+    const sampleStudents = allStudents.slice(0, 50)
+    const sampleIds = sampleStudents.map(s => s._id)
+    const [sSkills, sProjects, sCerts, sUsers] = await Promise.all([
+      Skill.find({ student: { $in: sampleIds } }),
+      Project.find({ student: { $in: sampleIds } }),
+      Certification.find({ student: { $in: sampleIds } }),
+      User.find({ _id: { $in: sampleIds } }),
+    ])
+    const sSkMap = {}; sSkills.forEach(s => { const id = s.student.toString(); if (!sSkMap[id]) sSkMap[id] = []; sSkMap[id].push(s) })
+    const sPrMap = {}; sProjects.forEach(p => { const id = p.student.toString(); if (!sPrMap[id]) sPrMap[id] = []; sPrMap[id].push(p) })
+    const sCrMap = {}; sCerts.forEach(c => { const id = c.student.toString(); if (!sCrMap[id]) sCrMap[id] = []; sCrMap[id].push(c) })
+    const sUMap  = {}; sUsers.forEach(u => { sUMap[u._id.toString()] = u })
+
+    const roleComparison = TOP_ROLES.map(role => {
+      const scores = sampleStudents.map(s => {
+        const id = s._id.toString()
+        return computeReadiness(sUMap[id] || s, sSkMap[id] || [], sPrMap[id] || [], sCrMap[id] || [], role).total
+      })
+      const platformAvg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0
+      return { role, yourScore: myRoleMap[role] || 0, platformAvg }
+    })
+
+    // Percentile based on best readiness score
+    const myBest = myAllRoles[0]?.total || 0
+    const platformBests = sampleStudents.map(s => {
+      const id = s._id.toString()
+      const r  = computeAllRoles(sUMap[id] || s, sSkMap[id] || [], sPrMap[id] || [], sCrMap[id] || [])
+      return r[0]?.total || 0
+    })
+    const percentile = platformBests.length
+      ? Math.round((platformBests.filter(sc => sc < myBest).length / platformBests.length) * 100)
+      : 0
+
+    res.json({
+      you: {
+        skillCount:   mySkills.length,
+        projectCount: myProjects.length,
+        certCount:    myCerts.length,
+        cgpa:         user.cgpa || null,
+        bestScore:    myBest,
+      },
+      platform: {
+        totalStudents,
+        avgSkills:   parseFloat(avgSkills.toFixed(1)),
+        avgProjects: parseFloat(avgProjects.toFixed(1)),
+        avgCerts:    parseFloat(avgCerts.toFixed(1)),
+        avgCgpa:     parseFloat(avgCgpa.toFixed(2)),
+      },
+      skillComparison: skillComparison.sort((a, b) =>
+        Math.abs(b.yourLevel - b.platformAvg) - Math.abs(a.yourLevel - a.platformAvg)
+      ),
+      roleComparison,
+      percentile,
+    })
+  } catch (err) { res.status(500).json({ message: err.message }) }
+}
+
 module.exports = {
   getProfile, updateProfile,
   getSkills, addSkill, deleteSkill,
@@ -303,5 +425,5 @@ module.exports = {
   getCertifications, addCertification, deleteCertification,
   getDashboard, getRecommendations, getSkillGap,
   getReadiness, getActionPlan,
-  getResume,
+  getResume, getCompare,
 }

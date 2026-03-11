@@ -1,23 +1,37 @@
-const express = require('express');
-const router = express.Router();
-const auth = require('../middleware/auth');
-const studentController = require('../controllers/studentController');
+const express = require('express')
+const router = express.Router()
+const { protect, requireRole } = require('../middleware/auth')
+const ctrl = require('../controllers/studentController')
 
-router.use(auth);
+router.use(protect, requireRole('student'))
 
-router.get('/profile', studentController.getStudentProfile);
-router.put('/profile', studentController.updateStudentProfile);
+// Profile
+router.get('/profile',    ctrl.getProfile)
+router.put('/profile',    ctrl.updateProfile)
 
-router.post('/skills', studentController.addSkill);
-router.get('/skills', studentController.getSkills);
+// Skills
+router.get('/skills',        ctrl.getSkills)
+router.post('/skills',       ctrl.addSkill)
+router.delete('/skills/:id', ctrl.deleteSkill)
 
-router.post('/projects', studentController.addProject);
-router.get('/projects', studentController.getProjects);
+// Projects
+router.get('/projects',         ctrl.getProjects)
+router.post('/projects',        ctrl.addProject)
+router.put('/projects/:id',     ctrl.updateProject)
+router.delete('/projects/:id',  ctrl.deleteProject)
 
-router.post('/certifications', studentController.addCertification);
-router.get('/certifications', studentController.getCertifications);
+// Certifications
+router.get('/certifications',          ctrl.getCertifications)
+router.post('/certifications',         ctrl.addCertification)
+router.delete('/certifications/:id',   ctrl.deleteCertification)
 
-router.post('/achievements', studentController.addAchievement);
-router.get('/achievements', studentController.getAchievements);
+// Analytics & intelligence
+router.get('/dashboard',       ctrl.getDashboard)
+router.get('/recommendations', ctrl.getRecommendations)
+router.get('/skill-gap',       ctrl.getSkillGap)
+router.get('/readiness',       ctrl.getReadiness)
+router.get('/action-plan',     ctrl.getActionPlan)
+router.get('/resume',          ctrl.getResume)
+router.get('/compare',         ctrl.getCompare)
 
-module.exports = router;
+module.exports = router

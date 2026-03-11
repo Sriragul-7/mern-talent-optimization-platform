@@ -68,17 +68,23 @@ export default function EmployerDashboard() {
       {/* Top skills on platform */}
       {topSkills.length > 0 && (
         <Card className="p-5">
-          <h3 className="section-title mb-4">Most Common Skills on Platform</h3>
-          <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={topSkills} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }} barSize={12}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(0,0,0,0.05)" />
-              <XAxis type="number" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
-              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={110} axisLine={false} tickLine={false} />
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="section-title">Most Common Skills on Platform</h3>
+              <p className="text-xs text-slate-400 mt-0.5">Number of students with each skill</p>
+            </div>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={topSkills} barSize={32} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148,163,184,0.1)" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip
                 contentStyle={{ background: '#0f172a', border: 'none', borderRadius: 10, fontSize: 12, color: '#fff' }}
                 cursor={{ fill: 'rgba(14,165,233,0.06)' }}
+                formatter={(v) => [v, 'Students']}
               />
-              <Bar dataKey="count" radius={[0, 6, 6, 0]}>
+              <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                 {topSkills.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
               </Bar>
             </BarChart>
