@@ -8,8 +8,9 @@ export default function TopNav({ onMenuClick, title, subtitle }) {
 
   const handleLogout = () => { logout(); navigate('/login') }
   const handleProfileClick = () => {
-    if (user?.role === 'student') navigate('/student/profile')
-    else navigate('/employer/dashboard')
+    if (user?.role === 'student')  navigate('/student/profile')
+    else if (user?.role === 'admin') navigate('/admin/dashboard')
+    else navigate('/employer/profile')
   }
 
   const initials = (user?.name || user?.companyName || '?')

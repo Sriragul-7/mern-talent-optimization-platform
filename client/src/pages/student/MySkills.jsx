@@ -182,6 +182,14 @@ export default function MySkills() {
       setError("Please enter or select a skill name.");
       return;
     }
+    // Prevent duplicate skill names (case-insensitive)
+    const isDuplicate = skills.some(
+      (s) => s.name.toLowerCase() === form.name.trim().toLowerCase()
+    );
+    if (isDuplicate) {
+      setError(`You already have "${form.name.trim()}" in your skills.`);
+      return;
+    }
     setSaving(true);
     try {
       const res = await studentService.addSkill(form);

@@ -4,6 +4,12 @@ import { Eye, EyeOff, ArrowRight, GraduationCap, Briefcase, CheckCircle2, Clock,
 import { useAuth } from '../context/AuthContext'
 import { authService } from '../services/api'
 
+const INDUSTRIES = [
+  'Technology', 'Finance & FinTech', 'Healthcare', 'Education',
+  'E-Commerce & Retail', 'Manufacturing', 'Consulting', 'Media & Entertainment',
+  'Logistics & Supply Chain', 'Real Estate', 'Other',
+]
+
 
 export default function Register() {
   const [role, setRole] = useState('student')
@@ -24,13 +30,18 @@ export default function Register() {
     if (role === 'student') {
       setError(''); setLoading(true)
       try {
-        const res = await authService.register({ ...form, role })
+        const res = await authService.register({ name: form.name, email: form.email, password: form.password, role })
         login(res.data.user, res.data.token)
         navigate('/student/dashboard')
       } catch (err) {
         setError(err.response?.data?.message || 'Registration failed.')
       } finally { setLoading(false) }
     } else {
+      // Validate company name before moving to step 2
+      if (!form.companyName.trim()) {
+        setError('Company name is required.')
+        return
+      }
       setError(''); setStep(2)
     }
   }
@@ -41,7 +52,13 @@ export default function Register() {
     setError(''); setLoading(true)
     try {
       const formData = new FormData()
-      Object.entries({ ...form, role }).forEach(([k, v]) => v && formData.append(k, v))
+      formData.append('name', form.name)
+      formData.append('email', form.email)
+      formData.append('password', form.password)
+      formData.append('companyName', form.companyName)
+      if (form.industry) formData.append('industry', form.industry)
+      if (form.location) formData.append('location', form.location)
+      if (form.website)  formData.append('website', form.website)
       formData.append('proofDocument', proofFile)
       await authService.registerEmployer(formData)
       setStep(3)

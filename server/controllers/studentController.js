@@ -43,7 +43,15 @@ const getSkills = async (req, res) => {
 const addSkill = async (req, res) => {
   try {
     const { name, category, level } = req.body
-    const skill = await Skill.create({ student: req.user._id, name, category, level })
+    // Prevent duplicate skill names for the same student
+    const existing = await Skill.findOne({
+      student: req.user._id,
+      name: { $regex: `^${name.trim()}$`, $options: 'i' },
+    })
+    if (existing) {
+      return res.status(400).json({ message: `You already have "${name}" in your skills.` })
+    }
+    const skill = await Skill.create({ student: req.user._id, name: name.trim(), category, level })
     res.status(201).json(skill)
   } catch (err) { res.status(500).json({ message: err.message }) }
 }

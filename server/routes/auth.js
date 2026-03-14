@@ -2,10 +2,15 @@ const express = require('express')
 const router = express.Router()
 const multer = require('multer')
 const path = require('path')
+const fs = require('fs')
 const { body } = require('express-validator')
 const { register, registerEmployer, login, getMe } = require('../controllers/authController')
 const { protect } = require('../middleware/auth')
 const validate = require('../middleware/validate')
+
+// ── Ensure uploads/proofs directory exists ────────────────────────────────
+const proofDir = path.join(__dirname, '../uploads/proofs')
+if (!fs.existsSync(proofDir)) fs.mkdirSync(proofDir, { recursive: true })
 
 // ── Multer config for employer proof PDFs ─────────────────────────────────
 const storage = multer.diskStorage({
@@ -62,5 +67,16 @@ router.post('/login', [
 
 // GET /api/auth/me
 router.get('/me', protect, getMe)
+
+// Handle multer errors (e.g. wrong file type)
+router.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ message: 'File too large. Maximum size is 5 MB.' })
+  }
+  if (err.message === 'Only PDF files are accepted') {
+    return res.status(400).json({ message: 'Only PDF files are accepted.' })
+  }
+  next(err)
+})
 
 module.exports = router

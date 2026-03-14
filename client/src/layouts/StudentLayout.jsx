@@ -4,13 +4,16 @@ import StudentSidebar from './StudentSidebar'
 import TopNav from './TopNav'
 
 const TITLES = {
-  '/student/dashboard': { title: 'Dashboard', subtitle: 'Welcome back! Here\'s your progress.' },
-  '/student/skills': { title: 'My Skills', subtitle: 'Manage and showcase your skillset' },
-  '/student/projects': { title: 'My Projects', subtitle: 'Portfolio of your work' },
-  '/student/certifications': { title: 'Certifications', subtitle: 'Your credentials and achievements' },
-  '/student/skill-gap': { title: 'Skill Gap Analysis', subtitle: 'Identify and bridge skill gaps' },
-  '/student/resume': { title: 'Resume', subtitle: 'Preview and download your resume' },
-  '/student/profile': { title: 'Profile', subtitle: 'Manage your personal information' },
+  '/student/dashboard':     { title: 'Dashboard',          subtitle: "Welcome back! Here's your progress." },
+  '/student/skills':        { title: 'My Skills',          subtitle: 'Manage and showcase your skillset' },
+  '/student/projects':      { title: 'My Projects',        subtitle: 'Portfolio of your work' },
+  '/student/certifications':{ title: 'Certifications',     subtitle: 'Your credentials and achievements' },
+  '/student/skill-gap':     { title: 'Skill Gap Analysis', subtitle: 'Identify and bridge skill gaps' },
+  '/student/readiness':     { title: 'Readiness Score',    subtitle: 'Your career readiness breakdown' },
+  '/student/action-plan':   { title: 'Action Plan',        subtitle: 'Personalised steps to improve your score' },
+  '/student/compare':       { title: 'Compare',            subtitle: 'See how you rank against the platform' },
+  '/student/resume':        { title: 'Resume',             subtitle: 'Preview and download your resume' },
+  '/student/profile':       { title: 'Profile',            subtitle: 'Manage your personal information' },
 }
 
 export default function StudentLayout() {

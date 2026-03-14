@@ -1,23 +1,20 @@
 const User = require('../models/User')
 const { generateToken, formatUser } = require('../utils/jwt')
 
-// POST /api/auth/register
+// POST /api/auth/register  (students only — employers use /register-employer)
 const register = async (req, res) => {
   try {
-    const { name, email, password, role, companyName } = req.body
+    const { name, email, password, role } = req.body
+
+    // Prevent employers from bypassing the verification flow
+    if (role && role !== 'student') {
+      return res.status(400).json({ message: 'Employers must register via the employer registration flow.' })
+    }
 
     const existing = await User.findOne({ email })
     if (existing) return res.status(400).json({ message: 'Email already registered' })
 
-    const userData = { name, email, password, role }
-    if (role === 'employer') {
-      if (!companyName) return res.status(400).json({ message: 'Company name is required for employer accounts' })
-      userData.companyName = companyName
-      // Employers start as 'pending' — uncomment below to enforce verification:
-      // userData.employerStatus = 'pending'
-    }
-
-    const user = await User.create(userData)
+    const user = await User.create({ name, email, password, role: 'student' })
     const token = generateToken(user._id)
 
     res.status(201).json({ token, user: formatUser(user) })

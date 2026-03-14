@@ -19,7 +19,8 @@ export default function Login() {
     try {
       const res = await authService.login(form)
       login(res.data.user, res.data.token)
-      navigate(res.data.user.role === 'employer' ? '/employer/dashboard' : '/student/dashboard')
+      const role = res.data.user.role
+      navigate(role === 'employer' ? '/employer/dashboard' : role === 'admin' ? '/admin/dashboard' : '/student/dashboard')
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid email or password.')
     } finally { setLoading(false) }
