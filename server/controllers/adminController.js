@@ -47,10 +47,17 @@ const rejectEmployer = async (req, res) => {
 // GET /api/admin/employers/:id/proof  — serve the proof PDF
 const getProofDocument = async (req, res) => {
   try {
-    const employer = await User.findOne({ _id: req.params.id, role: 'employer' })
+    const employer = await User.findOne({ _id: req.params.id, role: 'employer' }).select('+proofDocumentData')
     if (!employer || !employer.proofDocument) {
       return res.status(404).json({ message: 'Proof document not found' })
     }
+
+    if (employer.proofDocumentData?.length) {
+      res.setHeader('Content-Type', employer.proofDocumentMimeType || 'application/pdf')
+      res.setHeader('Content-Disposition', `inline; filename="${employer.proofDocument}"`)
+      return res.send(employer.proofDocumentData)
+    }
+
     const filePath = path.join(__dirname, '../uploads/proofs', employer.proofDocument)
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({ message: 'File not found on server' })

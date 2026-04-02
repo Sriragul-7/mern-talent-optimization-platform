@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema({
 
   // Proof PDF filename (employer only)
   proofDocument: { type: String },
+  proofDocumentData: { type: Buffer, select: false },
+  proofDocumentMimeType: { type: String, trim: true },
 
   // ── Student-specific ──────────────────────────────────────────────────────
   age:        { type: Number },

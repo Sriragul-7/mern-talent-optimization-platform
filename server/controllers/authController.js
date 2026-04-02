@@ -78,8 +78,6 @@ const registerEmployer = async (req, res) => {
     const existing = await User.findOne({ email })
     if (existing) return res.status(400).json({ message: 'Email already registered' })
 
-    const proofDocumentPath = req.file.filename
-
     const user = await User.create({
       name, email, password,
       role: 'employer',
@@ -87,7 +85,9 @@ const registerEmployer = async (req, res) => {
       industry:  industry  || '',
       location:  location  || '',
       website:   website   || '',
-      proofDocument: proofDocumentPath,
+      proofDocument: req.file.originalname,
+      proofDocumentData: req.file.buffer,
+      proofDocumentMimeType: req.file.mimetype,
       employerStatus: 'pending', // must be approved by SkillBridge admin
     })
 
