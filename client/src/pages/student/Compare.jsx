@@ -136,26 +136,23 @@ export default function Compare() {
         <StatCompare label="CGPA"     yours={you?.cgpa}         avg={platform?.avgCgpa}     icon={GraduationCap} color="text-amber-500" />
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        
-        {/* Role readiness bar */}
-        <Card className="p-5">
-          <h3 className="section-title mb-0.5">Readiness vs Platform Average</h3>
-          <p className="text-xs text-slate-400 mb-4">Your score vs platform average per role (out of 100)</p>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={barData} barGap={3} margin={{ top: 0, right: 8, left: -20, bottom: 0 }}>
+      <Card className="p-5">
+        <h3 className="section-title mb-0.5">Readiness vs Platform Average</h3>
+        <p className="text-xs text-slate-400 mb-4">Your score vs platform average per role (out of 100)</p>
+        <div className="w-full min-w-0">
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={barData} barGap={8} margin={{ top: 12, right: 12, left: 0, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(0,0,0,0.05)" />
-              <XAxis dataKey="role" tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="role" tick={{ fontSize: 11 }} axisLine={false} tickLine={false} />
+              <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} axisLine={false} tickLine={false} width={36} />
               <Tooltip contentStyle={{ background: '#0f172a', border: 'none', borderRadius: 10, fontSize: 12, color: '#fff' }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="You" fill="#0ea5e9" radius={[4, 4, 0, 0]} maxBarSize={24} />
-              <Bar dataKey="Avg" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={24} fillOpacity={0.45} />
+              <Bar dataKey="You" fill="#0ea5e9" radius={[6, 6, 0, 0]} maxBarSize={36} />
+              <Bar dataKey="Avg" fill="#8b5cf6" radius={[6, 6, 0, 0]} maxBarSize={36} fillOpacity={0.5} />
             </BarChart>
           </ResponsiveContainer>
-        </Card>
-      </div>
+        </div>
+      </Card>
 
       {/* Skill-by-skill breakdown */}
       {skillComparison.length > 0 && (

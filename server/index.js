@@ -6,13 +6,24 @@ const morgan = require('morgan')
 const connectDB = require('./config/db')
 
 const app = express()
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.FRONTEND_URL_2,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+  'http://localhost:5173',
+  'http://localhost:3000',
+].filter(Boolean)
 
 // Connect to MongoDB
 connectDB()
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'],
+  origin(origin, callback) {
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    return callback(new Error(`CORS blocked for origin ${origin}`))
+  },
   credentials: true,
 }))
 app.use(express.json())

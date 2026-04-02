@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { CheckCircle2, XCircle, Star, ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2, XCircle, Star, ChevronDown, ChevronUp, AlertCircle, BookOpen } from 'lucide-react'
 import { studentService } from '../../services/api'
 
 const ROLES = [
@@ -18,6 +18,26 @@ const GRADE_CLASS = {
   blue:    'text-blue-600 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800',
   amber:   'text-amber-600 bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
   red:     'text-red-500 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
+}
+const GAP_BADGE_CLASS = {
+  High: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-200 dark:border-red-800',
+  Medium: 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+  Low: 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+}
+const LEARN_LINKS = {
+  'React.js': 'https://react.dev',
+  'Node.js': 'https://nodejs.org/docs',
+  'TypeScript': 'https://www.typescriptlang.org/docs/handbook/',
+  'Python': 'https://docs.python.org/3/tutorial/',
+  'Docker': 'https://docs.docker.com/get-started/',
+  'Kubernetes': 'https://kubernetes.io/docs/tutorials/kubernetes-basics/',
+  'Flutter': 'https://docs.flutter.dev/',
+  'Kotlin': 'https://kotlinlang.org/docs/',
+  'Swift': 'https://swift.org/documentation/',
+  'Figma': 'https://www.figma.com/resources/learn-design/',
+  'AWS': 'https://skillbuilder.aws/',
+  'TensorFlow': 'https://www.tensorflow.org/tutorials',
+  'PyTorch': 'https://pytorch.org/tutorials/',
 }
 
 function Ring({ score, size = 140 }) {
@@ -106,6 +126,10 @@ export default function ReadinessScore() {
 
   const bd = data?.breakdown || {}
   const gradeClass = GRADE_CLASS[data?.grade?.color] || GRADE_CLASS.amber
+  const matchedSkills = data?.matchedSkills || []
+  const missingSkills = data?.missingSkills || []
+  const highPriorityGaps = missingSkills.filter(skill => skill.importance === 'High')
+  const supportingGaps = missingSkills.filter(skill => skill.importance !== 'High')
 
   return (
     <div className="space-y-5">
@@ -164,11 +188,11 @@ export default function ReadinessScore() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Matched Skills ({(data?.matchedSkills || []).length})
+            <CheckCircle2 className="w-4 h-4 text-emerald-500" /> Matched Skills ({matchedSkills.length})
           </p>
-          {(data?.matchedSkills || []).length > 0 ? (
+          {matchedSkills.length > 0 ? (
             <div className="flex flex-wrap gap-2">
-              {data.matchedSkills.map(s => (
+              {matchedSkills.map(s => (
                 <span key={s.name} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                   <CheckCircle2 className="w-3 h-3" /> {s.name}
                   <span className="opacity-60">· {s.level}</span>
@@ -182,11 +206,11 @@ export default function ReadinessScore() {
 
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
-            <XCircle className="w-4 h-4 text-red-400" /> Missing Skills ({(data?.missingSkills || []).length})
+            <XCircle className="w-4 h-4 text-red-400" /> Missing Skills ({missingSkills.length})
           </p>
-          {(data?.missingSkills || []).length > 0 ? (
+          {missingSkills.length > 0 ? (
             <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-              {data.missingSkills.map(g => (
+              {missingSkills.map(g => (
                 <div key={g.skill} className="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full flex-shrink-0 ${g.importance === 'High' ? 'bg-red-400' : g.importance === 'Medium' ? 'bg-amber-400' : 'bg-blue-400'}`} />
@@ -201,6 +225,42 @@ export default function ReadinessScore() {
             </div>
           ) : (
             <p className="text-sm text-emerald-500 font-medium">🎉 You have all required skills for this role!</p>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500" /> Priority Skill Gaps
+          </p>
+          {highPriorityGaps.length > 0 ? (
+            <div className="space-y-3">
+              {highPriorityGaps.map(gap => (
+                <GapRow key={gap.skill} gap={gap} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              No high-priority gaps for this role. You can focus on supporting skills or move to the action plan.
+            </p>
+          )}
+        </div>
+
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center gap-2">
+            <BookOpen className="w-4 h-4 text-brand-500" /> Supporting Skills To Add
+          </p>
+          {supportingGaps.length > 0 ? (
+            <div className="space-y-3">
+              {supportingGaps.slice(0, 6).map(gap => (
+                <GapRow key={gap.skill} gap={gap} />
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              You have already covered the supporting skills tracked for this role.
+            </p>
           )}
         </div>
       </div>
@@ -240,6 +300,38 @@ export default function ReadinessScore() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function GapRow({ gap }) {
+  const learnUrl = LEARN_LINKS[gap.skill] || 'https://roadmap.sh'
+
+  return (
+    <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-slate-800 dark:text-white">{gap.skill}</span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${GAP_BADGE_CLASS[gap.importance] || GAP_BADGE_CLASS.Low}`}>
+            {gap.importance}
+          </span>
+          {gap.tier === 'core' && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 dark:bg-red-900/20 text-red-500 border border-red-100 dark:border-red-900/40">
+              Core
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-slate-400 mt-1">Estimated impact: +{gap.impact} points</p>
+      </div>
+      <a
+        href={learnUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors"
+      >
+        <BookOpen className="w-3 h-3" />
+        Learn
+      </a>
     </div>
   )
 }
