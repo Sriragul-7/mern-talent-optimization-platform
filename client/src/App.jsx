@@ -64,7 +64,6 @@ function AppRoutes() {
         <Route path="skills" element={<MySkills />} />
         <Route path="projects" element={<MyProjects />} />
         <Route path="certifications" element={<Certifications />} />
-        <Route path="skill-gap" element={<Navigate to="/student/readiness" replace />} />
         <Route path="readiness" element={<ReadinessScore />} />
         <Route path="action-plan" element={<ActionPlan />} />
         <Route path="resume" element={<Resume />} />

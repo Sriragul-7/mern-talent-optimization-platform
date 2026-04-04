@@ -11,7 +11,6 @@ const NAV = [
   { to: '/student/skills',         icon: Layers,          label: 'My Skills'      },
   { to: '/student/projects',       icon: FolderKanban,    label: 'My Projects'    },
   { to: '/student/certifications', icon: Award,           label: 'Certifications' },
-  { to: '/student/skill-gap',      icon: Target,          label: 'Skill Gap'      },
   { to: '/student/readiness',      icon: TrendingUp,      label: 'Readiness Score'},
   { to: '/student/action-plan',    icon: Rocket,          label: 'Action Plan'    },
   { to: '/student/resume',         icon: FileText,        label: 'Resume'         },

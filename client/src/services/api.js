@@ -60,7 +60,6 @@ export const studentService = {
   deleteCertification: id   => api.delete(`/student/certifications/${id}`),
 
   // Intelligence features
-  getSkillGap:      (role = 'Full Stack Developer') => api.get('/student/skill-gap', { params: { role } }),
   getReadiness:     (role = 'Full Stack Developer') => api.get('/student/readiness', { params: { role } }),
   getActionPlan:    (role = 'Full Stack Developer') => api.get('/student/action-plan', { params: { role } }),
   getRecommendations: () => api.get('/student/recommendations'),
