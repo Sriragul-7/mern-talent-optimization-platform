@@ -16,11 +16,11 @@ export default function EmployerLayout() {
   const meta = TITLES[pathname] || { title: 'SkillBridge' }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-surface-950 bg-mesh">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 bg-mesh">
       <EmployerSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <TopNav onMenuClick={() => setSidebarOpen(true)} {...meta} />
-        <main className="flex-1 p-3 sm:p-4 lg:p-6 animate-fade-in">
+        <main className="flex-1 px-4 py-4 sm:px-5 sm:py-5 lg:px-8 lg:py-6 xl:px-10 animate-fade-in">
           <Outlet />
         </main>
       </div>
