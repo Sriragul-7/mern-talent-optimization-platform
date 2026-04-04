@@ -130,13 +130,26 @@ export default function ReadinessScore() {
   const missingSkills = data?.missingSkills || []
   const highPriorityGaps = missingSkills.filter(skill => skill.importance === 'High')
   const supportingGaps = missingSkills.filter(skill => skill.importance !== 'High')
+  const ringSize = typeof window !== 'undefined' && window.innerWidth < 640 ? 118 : 140
 
   return (
     <div className="space-y-5">
       {/* Role selector */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5">
         <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">Select Target Role</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="sm:hidden">
+          <select
+            value={role}
+            onChange={(e) => changeRole(e.target.value)}
+            disabled={busy}
+            className="input-field"
+          >
+            {ROLES.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
+        </div>
+        <div className="hidden flex-wrap gap-2 sm:flex">
           {ROLES.map(r => (
             <button key={r} onClick={() => changeRole(r)} disabled={busy}
               className={`px-4 py-2 rounded-xl text-sm font-medium border transition-all disabled:opacity-60 ${
@@ -153,9 +166,9 @@ export default function ReadinessScore() {
       {/* Score + Breakdown */}
       <div className={`grid grid-cols-1 lg:grid-cols-3 gap-5 transition-opacity duration-200 ${busy ? 'opacity-50 pointer-events-none' : ''}`}>
         {/* Ring */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col items-center justify-center text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 sm:p-6 flex flex-col items-center justify-center text-center">
           <div className="relative mb-4">
-            <Ring score={data?.total ?? 0} />
+            <Ring score={data?.total ?? 0} size={ringSize} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-extrabold text-slate-900 dark:text-white leading-none">{data?.total ?? 0}</span>
               <span className="text-xs text-slate-400 font-medium">/100</span>

@@ -287,6 +287,7 @@ export default function ActionPlan() {
   const grouped = {}
   PHASES.forEach((phase) => { grouped[phase.type] = steps.filter((step) => step.type === phase.type) })
   const totalSteps = steps.length
+  const ringSize = typeof window !== 'undefined' && window.innerWidth < 640 ? 68 : 76
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -298,9 +299,9 @@ export default function ActionPlan() {
           className="pointer-events-none absolute right-0 top-0 h-48 w-48 rounded-full opacity-10"
           style={{ background: 'radial-gradient(circle, #0ea5e9, transparent)', transform: 'translate(30%,-30%)' }}
         />
-        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center">
-          <div className="relative flex-shrink-0">
-            <ScoreRing value={score} size={76} />
+        <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+          <div className="relative flex-shrink-0 self-center sm:self-auto">
+            <ScoreRing value={score} size={ringSize} />
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-xl font-extrabold leading-none text-white">{score}</span>
               <span className="text-[9px] text-white/60">/100</span>
@@ -309,7 +310,7 @@ export default function ActionPlan() {
           <div className="min-w-0 flex-1">
             <p className="mb-1 text-xs font-medium uppercase tracking-wider text-white/60">Your roadmap for</p>
             <h2 className="truncate text-xl font-bold text-white sm:text-2xl">{role}</h2>
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2 sm:justify-start sm:gap-3">
               <span className={`text-sm font-bold ${gradeStyle.text}`}>{gradeStyle.label}</span>
               <span className="text-xs text-white/30">|</span>
               <span className="text-xs text-white/50">{totalSteps} action{totalSteps !== 1 ? 's' : ''} to complete</span>
@@ -322,7 +323,19 @@ export default function ActionPlan() {
         <p className="mb-3 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
           <Rocket className="h-3.5 w-3.5" /> Switch Target Role
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div className="sm:hidden">
+          <select
+            value={role}
+            onChange={(e) => changeRole(e.target.value)}
+            disabled={busy}
+            className="input-field"
+          >
+            {ROLES.map((item) => (
+              <option key={item} value={item}>{item}</option>
+            ))}
+          </select>
+        </div>
+        <div className="hidden flex-wrap gap-2 sm:flex">
           {ROLES.map((item) => (
             <button
               key={item}
