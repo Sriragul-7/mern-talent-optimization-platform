@@ -25,7 +25,7 @@ export default function TopNav({ onMenuClick, title, subtitle }) {
       className="sticky top-0 z-20 bg-white/95 dark:bg-surface-900/95 backdrop-blur-md"
       style={{ borderBottom: '1px solid rgba(0,0,0,0.07)' }}
     >
-      <div className="flex items-center h-[4.5rem] px-6 gap-5">
+      <div className="flex min-h-[4.5rem] items-center gap-3 px-4 py-3 sm:gap-5 sm:px-6">
 
         {/* Mobile menu */}
         <button onClick={onMenuClick}
@@ -38,11 +38,11 @@ export default function TopNav({ onMenuClick, title, subtitle }) {
         <div className="flex-1 min-w-0">
           {title && (
             <div className="flex flex-col">
-              <h1 className="text-[1.35rem] font-bold text-slate-900 dark:text-white leading-none tracking-tight">
+              <h1 className="text-[1.05rem] font-bold text-slate-900 dark:text-white leading-tight tracking-tight sm:text-[1.35rem]">
                 {title}
               </h1>
               {subtitle && (
-                <p className="text-[0.78rem] text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                <p className="mt-1 hidden text-[0.78rem] font-medium text-slate-400 dark:text-slate-500 sm:block">
                   {subtitle}
                 </p>
               )}
@@ -56,7 +56,7 @@ export default function TopNav({ onMenuClick, title, subtitle }) {
           {/* User button → profile */}
           <button
             onClick={handleProfileClick}
-            className="flex items-center gap-2.5 px-2 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-all group"
+            className="group flex items-center gap-2 rounded-xl px-2 py-1.5 transition-all hover:bg-slate-100 dark:hover:bg-slate-800 sm:gap-2.5"
             title="Go to profile"
           >
             <div className={`w-8 h-8 rounded-xl bg-gradient-to-br ${roleColor} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 shadow-sm`}>

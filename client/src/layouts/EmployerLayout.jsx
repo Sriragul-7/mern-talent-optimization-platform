@@ -20,7 +20,7 @@ export default function EmployerLayout() {
       <EmployerSidebar open={sidebarOpen} setOpen={setSidebarOpen} />
       <div className="lg:ml-64 flex flex-col min-h-screen">
         <TopNav onMenuClick={() => setSidebarOpen(true)} {...meta} />
-        <main className="flex-1 p-4 lg:p-6 animate-fade-in">
+        <main className="flex-1 p-3 sm:p-4 lg:p-6 animate-fade-in">
           <Outlet />
         </main>
       </div>

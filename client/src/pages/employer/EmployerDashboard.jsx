@@ -58,7 +58,7 @@ export default function EmployerDashboard() {
       </div>
 
       {/* Key stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Total Students"  value={(stats?.totalStudents || 0).toLocaleString()} icon={Users}          gradient="bg-brand-100 dark:bg-brand-900/30"   />
         <StatCard title="Skills Tracked"  value={stats?.activeSkills || 0}                     icon={Layers}         gradient="bg-accent-100 dark:bg-accent-900/30"  />
         <StatCard title="Avg. CGPA"       value={stats?.avgCgpa || '—'}                        icon={TrendingUp}     gradient="bg-emerald-100 dark:bg-emerald-900/30"/>

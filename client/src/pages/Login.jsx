@@ -27,12 +27,12 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-start justify-center p-4 pt-8 sm:items-center">
       <div className="w-full max-w-md">
 
         {/* Brand */}
         <div className="text-center mb-8">
-          <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
             Skill<span className="text-brand-500">Bridge</span>
           </span>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">
@@ -41,7 +41,7 @@ export default function Login() {
         </div>
 
         {/* Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 sm:p-8">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Welcome back</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Sign in to your account</p>
 

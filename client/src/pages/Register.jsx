@@ -78,7 +78,7 @@ export default function Register() {
   // ── Step 3: Pending screen ────────────────────────────────────────────────
   if (step === 3) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-start justify-center p-4 pt-8 sm:items-center">
         <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 text-center">
           <div className="w-16 h-16 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mx-auto mb-4">
             <Clock className="w-8 h-8 text-amber-600" />
@@ -122,16 +122,16 @@ export default function Register() {
   // ── Step 2: Employer company details ─────────────────────────────────────
   if (step === 2) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-start justify-center p-4 pt-8 sm:items-center">
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
-            <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
               Skill<span className="text-brand-500">Bridge</span>
             </span>
             <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">Employer Verification — Step 2 of 2</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 sm:p-8">
             {/* Progress bar */}
             <div className="flex gap-2 mb-5">
               <div className="h-1.5 flex-1 rounded-full bg-brand-500" />
@@ -223,16 +223,16 @@ export default function Register() {
 
   // ── Step 1: Basic info ────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-start justify-center p-4 pt-8 sm:items-center">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <span className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <span className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-3xl">
             Skill<span className="text-brand-500">Bridge</span>
           </span>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-2">Career intelligence platform</p>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-5 sm:p-8">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1">Create your account</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-5">Join thousands of students and employers on SkillBridge.</p>
 

@@ -77,7 +77,7 @@ export default function StudentDashboard() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-brand-600 to-accent-600 p-6 text-white">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -translate-y-20 translate-x-20" />
         <div className="absolute bottom-0 right-16 w-40 h-40 bg-white/5 rounded-full translate-y-10" />
-        <div className="relative flex items-start justify-between gap-6">
+        <div className="relative flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex-1 min-w-0">
             <p className="text-white/70 text-sm font-medium">{greeting} 👋</p>
             <h2 className="text-2xl font-bold mt-0.5">{user?.name || 'Student'}</h2>
@@ -95,7 +95,7 @@ export default function StudentDashboard() {
 
           {/* Readiness score ring */}
           {s.readinessScore !== undefined && (
-            <Link to="/student/readiness" className="flex-shrink-0 flex flex-col items-center group">
+            <Link to="/student/readiness" className="group flex flex-col items-center self-start sm:flex-shrink-0">
               <div className="relative">
                 <MiniScoreRing score={s.readinessScore} />
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -112,7 +112,7 @@ export default function StudentDashboard() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard title="Skills"         value={s.skills ?? 0}              icon={Layers}       subtitle="Active skills"  gradient="bg-brand-100 dark:bg-brand-900/30" trend="up" trendValue="+2 this month" />
         <StatCard title="Projects"       value={s.projects ?? 0}            icon={FolderKanban} subtitle="In portfolio"   gradient="bg-accent-100 dark:bg-accent-900/30" />
         <StatCard title="Certifications" value={s.certifications ?? 0}      icon={Award}        subtitle="Earned"         gradient="bg-emerald-100 dark:bg-emerald-900/30" />

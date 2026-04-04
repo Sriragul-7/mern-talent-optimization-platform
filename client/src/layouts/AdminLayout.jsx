@@ -67,14 +67,14 @@ export default function AdminLayout() {
       {/* Main */}
       <div className="flex-1 flex flex-col lg:ml-64 overflow-hidden">
         {/* Top bar */}
-        <header className="h-[4.5rem] flex items-center px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0">
+        <header className="flex h-[4.5rem] flex-shrink-0 items-center border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-900 sm:px-6">
           <button onClick={() => setOpen(true)} className="lg:hidden mr-4 text-slate-500">
             <Menu className="w-5 h-5" />
           </button>
           <h1 className="text-base font-bold text-slate-800 dark:text-white">Admin Panel</h1>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <Outlet />
         </main>
       </div>
